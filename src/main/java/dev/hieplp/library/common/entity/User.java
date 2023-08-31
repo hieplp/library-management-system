@@ -15,7 +15,6 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String userId;
 
     @Column(unique = true,
@@ -37,6 +36,6 @@ public class User {
 
     private Timestamp modifiedAt;
 
-    @OneToOne(cascade = CascadeType.ALL, mappedBy = "user")
-    private Password setting;
+//    @OneToOne(cascade = CascadeType.ALL, mappedBy = "user")
+//    private Password password;
 }

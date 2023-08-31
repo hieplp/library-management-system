@@ -13,9 +13,13 @@ import dev.hieplp.library.common.exception.NotFoundException;
 import dev.hieplp.library.common.helper.OtpHelper;
 import dev.hieplp.library.common.helper.UserHelper;
 import dev.hieplp.library.common.util.*;
+import dev.hieplp.library.payload.request.auth.LoginRequest;
+import dev.hieplp.library.payload.request.auth.RefreshAccessTokenRequest;
 import dev.hieplp.library.payload.request.auth.register.ConfirmRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.RequestToRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.ResendRegisterOtpRequest;
+import dev.hieplp.library.payload.response.auth.LoginResponse;
+import dev.hieplp.library.payload.response.auth.RefreshAccessTokenResponse;
 import dev.hieplp.library.payload.response.auth.register.ConfirmRegisterResponse;
 import dev.hieplp.library.payload.response.auth.register.RequestToRegisterResponse;
 import dev.hieplp.library.payload.response.auth.register.ResendRegisterOtpResponse;
@@ -95,7 +99,7 @@ public class AuthServiceImpl implements AuthService {
         tempUserRepo.save(tempUser);
 
         // Send email
-//        EmailUtil.sendMime(javaMailSender, request.getEmail(), "Confirm register OTP", token);
+        EmailUtil.sendMime(javaMailSender, request.getEmail(), "Confirm register OTP", token);
 
         // Return response
         return RequestToRegisterResponse.builder()
@@ -190,5 +194,27 @@ public class AuthServiceImpl implements AuthService {
         return ConfirmRegisterResponse.builder()
                 .maskedEmail(MaskUtil.maskEmail(tempUser.getEmail()))
                 .build();
+    }
+
+    @Override
+    public LoginResponse login(LoginRequest request) {
+        log.info("Login with request: {}", request);
+
+        var user = userRepo.findByUsername(request.getUsername())
+                .orElseThrow(() -> new NotFoundException(String.format("User with username %s not found", request.getUsername())));
+
+        var password = passwordRepo.findById(user.getUserId());
+//
+        log.error("Password: {}", password);
+
+        return LoginResponse.builder()
+                .user(user)
+                .build();
+    }
+
+    @Override
+    public RefreshAccessTokenResponse refreshAccessToken(RefreshAccessTokenRequest request) {
+        log.info("Refresh access token with request: {}", request);
+        return null;
     }
 }

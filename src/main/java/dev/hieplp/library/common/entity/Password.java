@@ -15,9 +15,9 @@ public class Password {
     @Id
     private String userId;
 
-    @MapsId
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id")
+    @OneToOne(fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL)
+    @PrimaryKeyJoinColumn
     private User user;
 
     @Column(length = 64)
