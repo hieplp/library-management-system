@@ -1,4 +1,4 @@
-package dev.hieplp.library.payload.request.auth;
+package dev.hieplp.library.payload.request.auth.register;
 
 import lombok.Data;
 

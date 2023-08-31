@@ -1,12 +1,18 @@
 package dev.hieplp.library.common.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
 
 @Data
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -31,6 +37,6 @@ public class User {
 
     private Timestamp modifiedAt;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private Password password;
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "user")
+    private Password setting;
 }

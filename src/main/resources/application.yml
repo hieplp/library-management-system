@@ -16,3 +16,28 @@ spring:
     database-platform: org.hibernate.dialect.MariaDBDialect
     hibernate:
       ddl-auto: update
+  mail:
+    host: smtp.gmail.com
+    port: 465
+    username: helios.email.test@gmail.com
+    password: ltuzwzyrvvhpxjrt
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          ssl:
+            enable: true
+            required: true
+
+app:
+  register-otp:
+    quota: 5
+    wrong-quota: 3
+    resend-quota: 3
+    expiration-time: 3600
+  password-rsa:
+    private-key: rsa/private_key.der
+    public-key: rsa/public_key.der

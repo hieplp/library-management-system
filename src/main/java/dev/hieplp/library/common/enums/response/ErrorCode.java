@@ -2,12 +2,18 @@ package dev.hieplp.library.common.enums.response;
 
 public enum ErrorCode implements ResponseCode {
     BAD_REQUEST("4000", "Bad request"),
-    DUPLICATED_EMAIL("4001", "Email already exists"),
-    DUPLICATED_PHONE("4002", "Phone already exists"),
-    DUPLICATED_DEPARTMENT("4003", "Department already exists"),
     NOT_FOUND("4004", "Not found"),
-    DUPLICATED_ROLE("4005", "Role already exists"),
     INTERNAL_SERVER_ERROR("5000", "Internal server error"),
+
+    // OTP
+    OTP_WRONG("OTP_4001", "Wrong OTP"),
+    OTP_EXPIRED("OTP_4002", "OTP expired"),
+    OTP_QUOTA_EXCEEDED("OTP_4003", "OTP quota exceeded"),
+    OTP_IS_USED("OTP_4004", "OTP is used"),
+
+    // USER
+    USER_DUPLICATED_EMAIL("USER_4001", "Email already exists"),
+    USER_DUPLICATE_USERNAME("USER_4002", "Username already exists"),
     ;
 
     private final String code;

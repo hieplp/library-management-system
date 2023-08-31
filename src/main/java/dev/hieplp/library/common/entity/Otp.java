@@ -1,16 +1,24 @@
 package dev.hieplp.library.common.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
-import java.sql.Date;
 import java.sql.Timestamp;
 
 @Data
 @Entity
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@Accessors(chain = true)
 public class Otp {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String otpId;
 
     @Column(length = 1)
@@ -20,13 +28,16 @@ public class Otp {
 
     private String token;
 
-    private Date issueDate;
+    private Timestamp issueTime;
 
-    private Date expiryDate;
+    private Timestamp expiryTime;
+
+    private Integer resendCount;
 
     @Column(length = 1)
     private Byte status;
 
     private Timestamp createdAt;
+
     private Timestamp modifiedAt;
 }
