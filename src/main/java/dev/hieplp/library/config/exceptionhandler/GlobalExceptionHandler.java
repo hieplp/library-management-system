@@ -4,6 +4,7 @@ package dev.hieplp.library.config.exceptionhandler;
 import dev.hieplp.library.common.enums.response.ErrorCode;
 import dev.hieplp.library.common.exception.BadRequestException;
 import dev.hieplp.library.common.exception.NotFoundException;
+import dev.hieplp.library.common.exception.UnauthorizedException;
 import dev.hieplp.library.common.payload.response.CommonResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
@@ -30,6 +31,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public ResponseEntity<CommonResponse> handleBadRequestException(BadRequestException e) {
         log.error("BadRequestException: {}", e.getMessage());
         var data = new CommonResponse(ErrorCode.BAD_REQUEST, e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(data);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<CommonResponse> handleUnauthorizedException(UnauthorizedException e) {
+        log.error("UnauthorizedException: {}", e.getMessage());
+        var data = new CommonResponse(ErrorCode.UNAUTHORIZED, e.getMessage());
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(data);

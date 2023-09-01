@@ -4,7 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum TokenHeader {
-    USER_ID("userId"),
+    USER_ID("user"),
     TOKEN_TYPE("tokenType"),
     ;
 

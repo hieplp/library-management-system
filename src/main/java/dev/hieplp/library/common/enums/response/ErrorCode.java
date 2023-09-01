@@ -2,6 +2,7 @@ package dev.hieplp.library.common.enums.response;
 
 public enum ErrorCode implements ResponseCode {
     BAD_REQUEST("4000", "Bad request"),
+    UNAUTHORIZED("4001", "Unauthorized"),
     NOT_FOUND("4004", "Not found"),
     INTERNAL_SERVER_ERROR("5000", "Internal server error"),
 

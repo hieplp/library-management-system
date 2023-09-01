@@ -11,18 +11,20 @@ import dev.hieplp.library.common.enums.token.TokenType;
 import dev.hieplp.library.common.enums.user.TempUserStatus;
 import dev.hieplp.library.common.enums.user.UserStatus;
 import dev.hieplp.library.common.exception.NotFoundException;
+import dev.hieplp.library.common.exception.UnauthorizedException;
 import dev.hieplp.library.common.exception.user.InvalidUserNameOrPasswordException;
 import dev.hieplp.library.common.helper.OtpHelper;
 import dev.hieplp.library.common.helper.UserHelper;
+import dev.hieplp.library.common.model.TokenModel;
 import dev.hieplp.library.common.util.*;
 import dev.hieplp.library.config.AppConfig;
+import dev.hieplp.library.config.security.CurrentUser;
 import dev.hieplp.library.payload.request.auth.LoginRequest;
 import dev.hieplp.library.payload.request.auth.RefreshAccessTokenRequest;
 import dev.hieplp.library.payload.request.auth.register.ConfirmRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.RequestToRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.ResendRegisterOtpRequest;
 import dev.hieplp.library.payload.response.auth.LoginResponse;
-import dev.hieplp.library.payload.response.auth.RefreshAccessTokenResponse;
 import dev.hieplp.library.payload.response.auth.register.ConfirmRegisterResponse;
 import dev.hieplp.library.payload.response.auth.register.RequestToRegisterResponse;
 import dev.hieplp.library.payload.response.auth.register.ResendRegisterOtpResponse;
@@ -43,6 +45,9 @@ import java.security.PrivateKey;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+
+    private final CurrentUser currentUser;
+    private final CurrentUserUtil currentUserUtil;
 
     private final UserRepository userRepo;
     private final PasswordRepository passwordRepo;
@@ -246,8 +251,17 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public RefreshAccessTokenResponse refreshAccessToken(RefreshAccessTokenRequest request) {
+    public TokenModel refreshAccessToken(RefreshAccessTokenRequest request) {
         log.info("Refresh access token with request: {}", request);
-        return null;
+
+        if (!TokenType.REFRESH_TOKEN.getType().equals(currentUser.getTokenType())) {
+            log.warn("Current token is not refresh token");
+            throw new UnauthorizedException("Current token is not refresh token");
+        }
+
+        var user = userRepo.findById(currentUser.getUserId())
+                .orElseThrow(() -> new UnauthorizedException("User not found"));
+        return tokenUtil.generateToken(appConfig.getAccessToken(), tokenPrivateKey, TokenType.ACCESS_TOKEN, user);
+
     }
 }
