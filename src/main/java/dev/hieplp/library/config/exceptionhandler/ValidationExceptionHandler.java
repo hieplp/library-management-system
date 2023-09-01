@@ -32,7 +32,6 @@ public class ValidationExceptionHandler {
         result.put("errors", errors);
 
         var response = new CommonResponse(ErrorCode.BAD_REQUEST, result);
-        return ResponseEntity.badRequest()
-                .body(response);
+        return ResponseEntity.ok(response);
     }
 }

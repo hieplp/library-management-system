@@ -41,3 +41,12 @@ app:
   password-rsa:
     private-key: rsa/private_key.der
     public-key: rsa/public_key.der
+  token-rsa:
+    private-key: rsa/private_key.der
+    public-key: rsa/public_key.der
+  access-token:
+    active-time: 864000
+    issuer: hieplp.dev
+  refresh-token:
+    active-time: 3600
+    issuer: hieplp.dev

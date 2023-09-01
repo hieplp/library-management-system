@@ -22,7 +22,7 @@ public class QuotaExceptionHandler {
     public ResponseEntity<CommonResponse> handleExceededOtpQuotaException(ExceededOtpQuotaException e) {
         log.debug("ExceededOtpQuotaException: {}", e.getMessage());
         return ResponseEntity
-                .status(HttpStatus.TOO_MANY_REQUESTS)
+                .status(HttpStatus.OK)
                 .body(new CommonResponse(ErrorCode.OTP_QUOTA_EXCEEDED));
     }
 
@@ -30,7 +30,7 @@ public class QuotaExceptionHandler {
     public ResponseEntity<CommonResponse> handleExpiredOtpException(ExpiredOtpException e) {
         log.debug("ExpiredOtpException: {}", e.getMessage());
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.OK)
                 .body(new CommonResponse(ErrorCode.OTP_EXPIRED));
     }
 
@@ -38,7 +38,7 @@ public class QuotaExceptionHandler {
     public ResponseEntity<CommonResponse> handleIssuedOtpException(IssuedOtpException e) {
         log.debug("IssuedOtpException: {}", e.getMessage());
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.OK)
                 .body(new CommonResponse(ErrorCode.OTP_IS_USED));
     }
 
@@ -46,7 +46,7 @@ public class QuotaExceptionHandler {
     public ResponseEntity<CommonResponse> handleWrongOtpException(WrongOtpException e) {
         log.debug("WrongOtpException: {}", e.getMessage());
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.OK)
                 .body(new CommonResponse(ErrorCode.OTP_WRONG));
     }
 }

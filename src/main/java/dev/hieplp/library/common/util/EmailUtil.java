@@ -4,14 +4,13 @@ import dev.hieplp.library.common.exception.UnknownException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Component;
 
 
 @Slf4j
+@Component
 public class EmailUtil {
-    public static void sendMime(JavaMailSender sender,
-                                String sendTo,
-                                String subject,
-                                String content) {
+    public void sendMime(JavaMailSender sender, String sendTo, String subject, String content) {
         try {
             log.info("Send mime email to {} with subject {} and content {}", sendTo, subject, content);
             var message = sender.createMimeMessage();

@@ -7,12 +7,15 @@ import dev.hieplp.library.common.entity.User;
 import dev.hieplp.library.common.enums.IdLength;
 import dev.hieplp.library.common.enums.otp.OtpStatus;
 import dev.hieplp.library.common.enums.otp.OtpType;
+import dev.hieplp.library.common.enums.token.TokenType;
 import dev.hieplp.library.common.enums.user.TempUserStatus;
 import dev.hieplp.library.common.enums.user.UserStatus;
 import dev.hieplp.library.common.exception.NotFoundException;
+import dev.hieplp.library.common.exception.user.InvalidUserNameOrPasswordException;
 import dev.hieplp.library.common.helper.OtpHelper;
 import dev.hieplp.library.common.helper.UserHelper;
 import dev.hieplp.library.common.util.*;
+import dev.hieplp.library.config.AppConfig;
 import dev.hieplp.library.payload.request.auth.LoginRequest;
 import dev.hieplp.library.payload.request.auth.RefreshAccessTokenRequest;
 import dev.hieplp.library.payload.request.auth.register.ConfirmRegisterRequest;
@@ -49,8 +52,18 @@ public class AuthServiceImpl implements AuthService {
     private final OtpHelper otpHelper;
     private final UserHelper userHelper;
 
+    private final MaskUtil maskUtil;
+    private final EmailUtil emailUtil;
+    private final TokenUtil tokenUtil;
+    private final EncryptUtil encryptUtil;
+    private final DateTimeUtil dateTimeUtil;
+    private final GeneratorUtil generatorUtil;
+
+    private final AppConfig appConfig;
+    private final PrivateKey tokenPrivateKey;
     private final PrivateKey passwordPrivateKey;
     private final JavaMailSender javaMailSender;
+
 
     @Override
     @Transactional
@@ -65,11 +78,11 @@ public class AuthServiceImpl implements AuthService {
         otpHelper.validateOtpQuota(request.getEmail(), OtpType.REGISTER);
 
         // Save otp
-        var otpId = GeneratorUtil.generateId(IdLength.OTP_ID);
-        var token = GeneratorUtil.generateToken();
+        var otpId = generatorUtil.generateId(IdLength.OTP_ID);
+        var token = generatorUtil.generateToken();
         var otpConfig = otpHelper.getOtpConfig(OtpType.REGISTER);
-        var currentTime = DateTimeUtil.getCurrentTimestamp();
-        var expiryTime = DateTimeUtil.addSeconds(currentTime, otpConfig.getExpirationTime());
+        var currentTime = dateTimeUtil.getCurrentTimestamp();
+        var expiryTime = dateTimeUtil.addSeconds(currentTime, otpConfig.getExpirationTime());
         var otp = Otp.builder()
                 .otpId(otpId)
                 .type(OtpType.REGISTER.getType())
@@ -84,9 +97,9 @@ public class AuthServiceImpl implements AuthService {
                 .build();
 
         // Save temporary user
-        var salt = GeneratorUtil.generateSalt();
-        var password = EncryptUtil.generatePassword(request.getPassword(), passwordPrivateKey, salt);
-        var userId = GeneratorUtil.generateId(IdLength.USER_ID);
+        var salt = generatorUtil.generateSalt();
+        var password = encryptUtil.generatePassword(request.getPassword(), passwordPrivateKey, salt);
+        var userId = generatorUtil.generateId(IdLength.USER_ID);
         var tempUser = TempUser.builder()
                 .userId(userId)
                 .username(request.getUsername())
@@ -99,12 +112,12 @@ public class AuthServiceImpl implements AuthService {
         tempUserRepo.save(tempUser);
 
         // Send email
-        EmailUtil.sendMime(javaMailSender, request.getEmail(), "Confirm register OTP", token);
+        emailUtil.sendMime(javaMailSender, request.getEmail(), "Confirm register OTP", token);
 
         // Return response
         return RequestToRegisterResponse.builder()
                 .otpId(otpId)
-                .maskedEmail(MaskUtil.maskEmail(request.getEmail()))
+                .maskedEmail(maskUtil.maskEmail(request.getEmail()))
                 .expiryTime(expiryTime)
                 .issuedTime(currentTime)
                 .build();
@@ -126,16 +139,16 @@ public class AuthServiceImpl implements AuthService {
         // Increase resend count
         otp
                 .setResendCount(otp.getResendCount() + 1)
-                .setModifiedAt(DateTimeUtil.getCurrentTimestamp());
+                .setModifiedAt(dateTimeUtil.getCurrentTimestamp());
         otpRepo.save(otp);
 
         // Resend email
-        EmailUtil.sendMime(javaMailSender, otp.getSendTo(), "Resend Register OTP", otp.getToken());
+        emailUtil.sendMime(javaMailSender, otp.getSendTo(), "Resend Register OTP", otp.getToken());
 
         // Return response
         return ResendRegisterOtpResponse.builder()
                 .otpId(otp.getOtpId())
-                .maskedEmail(MaskUtil.maskEmail(otp.getSendTo()))
+                .maskedEmail(maskUtil.maskEmail(otp.getSendTo()))
                 .expiryTime(otp.getExpiryTime())
                 .issuedTime(otp.getIssueTime())
                 .resendCount(otp.getResendCount())
@@ -164,11 +177,11 @@ public class AuthServiceImpl implements AuthService {
         // Update OTP status
         otp
                 .setStatus(OtpStatus.USED.getStatus())
-                .setModifiedAt(DateTimeUtil.getCurrentTimestamp());
+                .setModifiedAt(dateTimeUtil.getCurrentTimestamp());
         otpRepo.save(otp);
 
         // Save user information
-        var userId = GeneratorUtil.generateId(IdLength.USER_ID);
+        var userId = generatorUtil.generateId(IdLength.USER_ID);
 
         var user = User.builder()
                 .userId(userId)
@@ -176,9 +189,9 @@ public class AuthServiceImpl implements AuthService {
                 .email(tempUser.getEmail())
                 .status(UserStatus.ACTIVE.getStatus())
                 .createdBy(userId)
-                .createdAt(DateTimeUtil.getCurrentTimestamp())
+                .createdAt(dateTimeUtil.getCurrentTimestamp())
                 .modifiedBy(userId)
-                .modifiedAt(DateTimeUtil.getCurrentTimestamp())
+                .modifiedAt(dateTimeUtil.getCurrentTimestamp())
                 .build();
 
         var password = Password.builder()
@@ -192,7 +205,7 @@ public class AuthServiceImpl implements AuthService {
 
         // Return response
         return ConfirmRegisterResponse.builder()
-                .maskedEmail(MaskUtil.maskEmail(tempUser.getEmail()))
+                .maskedEmail(maskUtil.maskEmail(tempUser.getEmail()))
                 .build();
     }
 
@@ -201,14 +214,34 @@ public class AuthServiceImpl implements AuthService {
         log.info("Login with request: {}", request);
 
         var user = userRepo.findByUsername(request.getUsername())
-                .orElseThrow(() -> new NotFoundException(String.format("User with username %s not found", request.getUsername())));
+                .orElseThrow(() -> {
+                    log.warn("User with username {} not found", request.getUsername());
+                    return new InvalidUserNameOrPasswordException();
+                });
 
-        var password = passwordRepo.findById(user.getUserId());
-//
-        log.error("Password: {}", password);
+        var password = passwordRepo.findById(user.getUserId())
+                .orElseThrow(() -> {
+                    log.warn("Password for user {} not found", user.getUserId());
+                    return new InvalidUserNameOrPasswordException();
+                });
 
+        // Validate password
+        var isPassMatched = encryptUtil.validatePassword(request.getPassword(), password.getPassword(), password.getSalt(), passwordPrivateKey);
+        if (!isPassMatched) {
+            log.warn("Password not matched");
+            throw new InvalidUserNameOrPasswordException();
+        }
+
+        // Generate accessToken and refreshToken
+        var accessToken = tokenUtil.generateToken(appConfig.getAccessToken(), tokenPrivateKey, TokenType.ACCESS_TOKEN, user);
+
+        var refreshToken = tokenUtil.generateToken(appConfig.getRefreshToken(), tokenPrivateKey, TokenType.REFRESH_TOKEN, user);
+
+        // Return response
         return LoginResponse.builder()
                 .user(user)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
                 .build();
     }
 

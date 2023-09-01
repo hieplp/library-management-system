@@ -2,6 +2,7 @@ package dev.hieplp.library.common.util;
 
 
 import dev.hieplp.library.common.enums.IdLength;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -10,6 +11,7 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.ThreadLocalRandom;
 
+@Component
 public class GeneratorUtil {
     private static final String CHAR_LIST = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
     private static final String CHAR_LIST_NUMBER = "0123456789";
@@ -25,7 +27,7 @@ public class GeneratorUtil {
      * @param length length of OTP
      * @return random OTP
      */
-    public static String generateOTP(int length) {
+    public String generateOTP(int length) {
         StringBuilder otp = new StringBuilder();
         // Build the OTP by selecting random characters from the allowedChars string
         for (int i = 0; i < length; i++) {
@@ -42,7 +44,7 @@ public class GeneratorUtil {
      * @param length string length
      * @return random string
      */
-    public static String randomString(int length) {
+    public String randomString(int length) {
         StringBuilder userId = new StringBuilder();
         for (int i = 0; i < length; i++) {
             int index = ThreadLocalRandom.current().nextInt(CHAR_LIST_UPPER_ALPHABET.length());
@@ -57,7 +59,7 @@ public class GeneratorUtil {
      * @param idLength id length
      * @return random id
      */
-    public static String generateId(IdLength idLength) {
+    public String generateId(IdLength idLength) {
         return randomString(idLength.getLength());
     }
 
@@ -66,7 +68,7 @@ public class GeneratorUtil {
      *
      * @return random token
      */
-    public static String generateToken() {
+    public String generateToken() {
         return randomString(64);
     }
 
@@ -75,7 +77,7 @@ public class GeneratorUtil {
      *
      * @return salt
      */
-    public static byte[] generateSalt() {
+    public byte[] generateSalt() {
         final var sr = new SecureRandom();
         byte[] salt = new byte[SALT_SIZE];
         sr.nextBytes(salt);
@@ -89,7 +91,7 @@ public class GeneratorUtil {
      * @param salt     - salt
      * @return Hashed password
      */
-    public static byte[] hash(char[] password, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    public byte[] hash(char[] password, byte[] salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
         var spec = new PBEKeySpec(password, salt, ITERATION_COUNT, KEY_LENGTH);
         var skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
         return skf.generateSecret(spec).getEncoded();

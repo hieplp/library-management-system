@@ -21,6 +21,7 @@ public class OtpHelperImpl implements OtpHelper {
 
     private final AppConfig appConfig;
     private final OtpRepository otpRepo;
+    private final DateTimeUtil dateTimeUtil;
 
     @Override
     public OtpConfig getOtpConfig(OtpType otpType) {
@@ -56,7 +57,7 @@ public class OtpHelperImpl implements OtpHelper {
 
     @Override
     public void validateOtpLifeTime(Otp otp) {
-        var currentTime = DateTimeUtil.getCurrentTimestamp();
+        var currentTime = dateTimeUtil.getCurrentTimestamp();
         if (otp.getExpiryTime().before(currentTime)) {
             log.warn("Otp {} is expired", otp.getOtpId());
             throw new ExpiredOtpException(String.format("Otp %s is expired", otp.getOtpId()));

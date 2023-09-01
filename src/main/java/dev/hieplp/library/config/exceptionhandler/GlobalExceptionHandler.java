@@ -22,7 +22,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.error("NotFoundException: {}", e.getMessage());
         var data = new CommonResponse(ErrorCode.NOT_FOUND, e.getMessage());
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
+                .status(HttpStatus.OK)
                 .body(data);
     }
 
@@ -31,7 +31,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         log.error("BadRequestException: {}", e.getMessage());
         var data = new CommonResponse(ErrorCode.BAD_REQUEST, e.getMessage());
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
+                .status(HttpStatus.OK)
                 .body(data);
     }
 
