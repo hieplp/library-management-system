@@ -41,13 +41,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.PrivateKey;
 
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
     private final CurrentUser currentUser;
-    private final CurrentUserUtil currentUserUtil;
 
     private final UserRepository userRepo;
     private final PasswordRepository passwordRepo;
