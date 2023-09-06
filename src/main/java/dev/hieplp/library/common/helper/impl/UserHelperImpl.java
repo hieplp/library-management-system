@@ -24,6 +24,7 @@ public class UserHelperImpl implements UserHelper {
 
     @Override
     public void validateEmail(String email) {
+        log.info("Checking if email {} is already in use", email);
         if (userRepo.existsByEmail(email)) {
             log.warn("Email {} is already in use", email);
             throw new DuplicatedEmailException(String.format("Email %s is already in use", email));
