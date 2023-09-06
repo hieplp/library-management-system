@@ -239,7 +239,6 @@ public class AuthServiceImpl implements AuthService {
 
         // Generate accessToken and refreshToken
         var accessToken = tokenUtil.generateToken(appConfig.getAccessToken(), tokenPrivateKey, TokenType.ACCESS_TOKEN, user);
-
         var refreshToken = tokenUtil.generateToken(appConfig.getRefreshToken(), tokenPrivateKey, TokenType.REFRESH_TOKEN, user);
 
         // Return response

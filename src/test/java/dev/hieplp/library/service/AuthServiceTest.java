@@ -2,20 +2,31 @@ package dev.hieplp.library.service;
 
 import dev.hieplp.library.common.config.OtpConfig;
 import dev.hieplp.library.common.entity.Otp;
+import dev.hieplp.library.common.entity.Password;
 import dev.hieplp.library.common.entity.TempUser;
+import dev.hieplp.library.common.entity.User;
 import dev.hieplp.library.common.enums.IdLength;
 import dev.hieplp.library.common.enums.otp.OtpType;
+import dev.hieplp.library.common.enums.token.TokenType;
 import dev.hieplp.library.common.exception.NotFoundException;
+import dev.hieplp.library.common.exception.UnauthorizedException;
 import dev.hieplp.library.common.exception.otp.ExceededOtpQuotaException;
 import dev.hieplp.library.common.exception.otp.ExpiredOtpException;
 import dev.hieplp.library.common.exception.user.DuplicatedEmailException;
 import dev.hieplp.library.common.exception.user.DuplicatedUsernameException;
+import dev.hieplp.library.common.exception.user.InvalidUserNameOrPasswordException;
 import dev.hieplp.library.common.helper.OtpHelper;
 import dev.hieplp.library.common.helper.UserHelper;
+import dev.hieplp.library.common.model.TokenModel;
 import dev.hieplp.library.common.util.*;
+import dev.hieplp.library.config.AppConfig;
+import dev.hieplp.library.config.security.CurrentUser;
+import dev.hieplp.library.payload.request.auth.LoginRequest;
+import dev.hieplp.library.payload.request.auth.RefreshAccessTokenRequest;
 import dev.hieplp.library.payload.request.auth.register.ConfirmRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.RequestToRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.ResendRegisterOtpRequest;
+import dev.hieplp.library.payload.response.auth.LoginResponse;
 import dev.hieplp.library.payload.response.auth.register.ConfirmRegisterResponse;
 import dev.hieplp.library.payload.response.auth.register.RequestToRegisterResponse;
 import dev.hieplp.library.payload.response.auth.register.ResendRegisterOtpResponse;
@@ -36,6 +47,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -47,10 +59,30 @@ import static org.mockito.Mockito.*;
 public class AuthServiceTest {
     @InjectMocks
     private AuthServiceImpl authService;
+
+    // Config
+    @Mock
+    private AppConfig appConfig;
+    @Mock
+    private CurrentUser currentUser;
+
+    // Repository
+    @Mock
+    private UserRepository userRepo;
+    @Mock
+    private OtpRepository otpRepo;
+    @Mock
+    private PasswordRepository passwordRepo;
+    @Mock
+    private TempUserRepository tempUserRepo;
+
+    // Helper
     @Mock
     private UserHelper userHelper;
     @Mock
     private OtpHelper otpHelper;
+
+    // Util
     @Mock
     private GeneratorUtil generatorUtil;
     @Mock
@@ -58,18 +90,11 @@ public class AuthServiceTest {
     @Mock
     private EncryptUtil encryptUtil;
     @Mock
-    private TempUserRepository tempUserRepo;
+    private TokenUtil tokenUtil;
     @Mock
     private EmailUtil emailUtil;
     @Mock
     private MaskUtil maskUtil;
-    @Mock
-    private UserRepository userRepo;
-    @Mock
-    private OtpRepository otpRepo;
-    @Mock
-    private PasswordRepository passwordRepo;
-
 
     @BeforeAll
     public static void setup() {
@@ -316,6 +341,136 @@ public class AuthServiceTest {
             var result = authService.confirmRegister(request);
             assertEquals(expected.getMaskedEmail(), result.getMaskedEmail());
         }
+    }
 
+    @Nested
+    class LoginTest {
+        private final String userId;
+        private final String username;
+        private final String userPassword;
+        private final User user;
+        private final Password password;
+        private final LoginRequest request;
+
+        LoginTest() {
+            userId = "userId";
+            username = "username";
+            userPassword = "password";
+
+            user = new User();
+            user.setUserId(userId);
+            user.setUsername(username);
+
+            password = new Password();
+            password.setUserId(userId);
+            password.setPassword(userPassword.getBytes());
+            password.setUser(user);
+
+            request = new LoginRequest();
+            request.setUsername(username);
+            request.setPassword(userPassword);
+        }
+
+
+        @Test
+        void shouldThrowInvalidUserNameOrPasswordException_WhenUsernameIsNotFound() {
+            doReturn(Optional.empty()).when(userRepo).findByUsername(username);
+            assertThrows(InvalidUserNameOrPasswordException.class, () -> authService.login(request));
+        }
+
+        @Test
+        void shouldThrowInvalidUserNameOrPasswordException_WhenPasswordIsNotFound() {
+            doReturn(Optional.of(user)).when(userRepo).findByUsername(username);
+            doReturn(Optional.empty()).when(passwordRepo).findById(userId);
+
+            assertThrows(InvalidUserNameOrPasswordException.class, () -> authService.login(request));
+        }
+
+        @Test
+        void shouldThrowInvalidUserNameOrPasswordException_WhenPasswordIsIncorrect() {
+            doReturn(Optional.of(user)).when(userRepo).findByUsername(username);
+            doReturn(Optional.of(password)).when(passwordRepo).findById(userId);
+            doReturn(false).when(encryptUtil).validatePassword(any(), any(), any(), any());
+
+            assertThrows(InvalidUserNameOrPasswordException.class, () -> authService.login(request));
+        }
+
+        @Test
+        void shouldSuccess_WhenAllConditionsAreMet() {
+            final var accessToken = TokenModel.builder()
+                    .token("accessToken")
+                    .expiredAt(new Timestamp(System.currentTimeMillis() + 1000L))
+                    .build();
+            final var refreshToken = TokenModel.builder()
+                    .token("refreshToken")
+                    .expiredAt(new Timestamp(System.currentTimeMillis() + 1000L))
+                    .build();
+
+            final var expected = LoginResponse.builder()
+                    .user(user)
+                    .accessToken(accessToken)
+                    .refreshToken(refreshToken)
+                    .build();
+
+            doReturn(Optional.of(user)).when(userRepo).findByUsername(username);
+            doReturn(Optional.of(password)).when(passwordRepo).findById(userId);
+            doReturn(true).when(encryptUtil).validatePassword(any(), any(), any(), any());
+            doReturn(accessToken).when(tokenUtil).generateToken(any(), any(), eq(TokenType.ACCESS_TOKEN), any());
+            doReturn(refreshToken).when(tokenUtil).generateToken(any(), any(), eq(TokenType.REFRESH_TOKEN), any());
+
+            var result = authService.login(request);
+            assertEquals(expected.getUser(), result.getUser());
+            assertEquals(expected.getAccessToken(), result.getAccessToken());
+            assertEquals(expected.getRefreshToken(), result.getRefreshToken());
+        }
+    }
+
+    @Nested
+    class RefreshAccessTokenTest {
+
+        private final RefreshAccessTokenRequest request;
+        private final String userId;
+
+        RefreshAccessTokenTest() {
+            userId = "userId";
+            request = new RefreshAccessTokenRequest();
+        }
+
+        @Test
+        void shouldThrowUnauthorizedException_WhenTokenIsNotRefreshToken() {
+            doReturn(TokenType.ACCESS_TOKEN.getType()).when(currentUser).getTokenType();
+            assertThrows(UnauthorizedException.class, () -> authService.refreshAccessToken(request));
+        }
+
+        @Test
+        void shouldThrowUnauthorizedException_WhenUserIsNotFound() {
+            doReturn(TokenType.REFRESH_TOKEN.getType()).when(currentUser).getTokenType();
+            doReturn(Optional.empty()).when(userRepo).findById(userId);
+            assertThrows(UnauthorizedException.class, () -> authService.refreshAccessToken(request));
+        }
+
+        @Test
+        void shouldSuccess_WhenAllConditionsAreMet() {
+            final var token = "token";
+            final var currentDate = new Date();
+            final var expiredAt = new Date(currentDate.getTime() + 1000L);
+
+            final var user = new User();
+            user.setUserId(userId);
+
+            final var expected = TokenModel.builder()
+                    .token(token)
+                    .expiredAt(expiredAt)
+                    .build();
+
+            doReturn(userId).when(currentUser).getUserId();
+            doReturn(TokenType.REFRESH_TOKEN.getType()).when(currentUser).getTokenType();
+            doReturn(Optional.of(user)).when(userRepo).findById(userId);
+            doReturn(expected).when(tokenUtil).generateToken(any(), any(), eq(TokenType.ACCESS_TOKEN), any());
+
+            var result = authService.refreshAccessToken(request);
+            assertEquals(expected.getToken(), result.getToken());
+            assertEquals(expected.getExpiredAt(), result.getExpiredAt());
+        }
     }
 }
