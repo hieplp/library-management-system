@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.sql.Timestamp;
 
@@ -15,6 +16,7 @@ import java.sql.Timestamp;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Accessors(chain = true)
 public class User {
     @Id
     private String userId;
@@ -26,6 +28,12 @@ public class User {
     @Column(unique = true,
             length = 100)
     private String email;
+
+    @Column(length = 100)
+    private String fullName;
+
+    @Column(length = 100)
+    private String avatar;
 
     @Column(length = 1)
     private Byte status;

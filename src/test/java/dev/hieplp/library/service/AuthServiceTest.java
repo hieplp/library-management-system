@@ -115,7 +115,7 @@ public class AuthServiceTest {
         @Test
         void shouldThrowDuplicatedEmailException_WhenEmailIsDuplicated() {
             var request = new RequestToRegisterRequest();
-            request.setEmail("old@hieplp.dev" );
+            request.setEmail("old@hieplp.dev");
             doThrow(DuplicatedEmailException.class).when(userHelper).validateEmail(request.getEmail());
             assertThrows(DuplicatedEmailException.class, () -> authService.requestToRegister(request));
         }
@@ -123,7 +123,7 @@ public class AuthServiceTest {
         @Test
         void shouldThrowDuplicatedUsernameException_WhenUsernameIsDuplicated() {
             var request = new RequestToRegisterRequest();
-            request.setUsername("hieplp_old" );
+            request.setUsername("hieplp_old");
             doThrow(DuplicatedUsernameException.class).when(userHelper).validateUsername(request.getUsername());
             assertThrows(DuplicatedUsernameException.class, () -> authService.requestToRegister(request));
         }
@@ -131,7 +131,7 @@ public class AuthServiceTest {
         @Test
         void shouldThrowExceededOtpQuotaException_WhenOtpQuotaIsExceeded() {
             var request = new RequestToRegisterRequest();
-            request.setEmail("new@hieplp.dev" );
+            request.setEmail("new@hieplp.dev");
             doThrow(ExceededOtpQuotaException.class).when(otpHelper).validateOtpQuota(request.getEmail(), OtpType.REGISTER);
             assertThrows(ExceededOtpQuotaException.class, () -> authService.requestToRegister(request));
         }
@@ -139,9 +139,9 @@ public class AuthServiceTest {
         @Test
         void shouldThrowException_WhenSaveError() {
             var request = new RequestToRegisterRequest();
-            request.setEmail("new@hieplp.dev" );
-            request.setUsername("hieplp_new" );
-            request.setPassword("password" );
+            request.setEmail("new@hieplp.dev");
+            request.setUsername("hieplp_new");
+            request.setPassword("password");
 
             final var otpId = "otpId";
             final var token = "token";
@@ -166,9 +166,9 @@ public class AuthServiceTest {
         @Test
         void shouldThrowException_WhenSendEmailError() {
             var request = new RequestToRegisterRequest();
-            request.setEmail("new@hieplp.dev" );
-            request.setUsername("hieplp_new" );
-            request.setPassword("password" );
+            request.setEmail("new@hieplp.dev");
+            request.setUsername("hieplp_new");
+            request.setPassword("password");
 
             final var otpId = "otpId";
             final var token = "token";
@@ -193,9 +193,9 @@ public class AuthServiceTest {
         @Test
         void shouldSuccess_WhenAllConditionsAreMet() {
             final var request = new RequestToRegisterRequest();
-            request.setEmail("new@hieplp.dev" );
-            request.setUsername("hieplp_new" );
-            request.setPassword("password" );
+            request.setEmail("new@hieplp.dev");
+            request.setUsername("hieplp_new");
+            request.setPassword("password");
 
             final var otpId = "otpId";
             final var token = "token";
@@ -369,8 +369,8 @@ public class AuthServiceTest {
         @Test
         void shouldThrowDuplicatedEmailException_WhenEmailIsDuplicated() {
             final var tempUser = new TempUser();
-            tempUser.setUserId("userId" );
-            tempUser.setEmail("email" );
+            tempUser.setUserId("userId");
+            tempUser.setEmail("email");
             tempUser.setOtp(otp);
 
             doReturn(Optional.of(otp)).when(otpRepo).findByTokenAndType(token, OtpType.REGISTER.getType());
@@ -384,8 +384,8 @@ public class AuthServiceTest {
         @Test
         void shouldThrowDuplicatedUsernameException_WhenUsernameIsDuplicated() {
             final var tempUser = new TempUser();
-            tempUser.setUserId("userId" );
-            tempUser.setEmail("email" );
+            tempUser.setUserId("userId");
+            tempUser.setEmail("email");
             tempUser.setOtp(otp);
 
             doReturn(Optional.of(otp)).when(otpRepo).findByTokenAndType(token, OtpType.REGISTER.getType());
@@ -400,8 +400,8 @@ public class AuthServiceTest {
         @Test
         void shouldThrowException_WhenSaveError() {
             final var tempUser = new TempUser();
-            tempUser.setUserId("userId" );
-            tempUser.setEmail("email" );
+            tempUser.setUserId("userId");
+            tempUser.setEmail("email");
             tempUser.setOtp(otp);
 
             doReturn(Optional.of(otp)).when(otpRepo).findByTokenAndType(token, OtpType.REGISTER.getType());
@@ -420,8 +420,8 @@ public class AuthServiceTest {
         @Test
         void shouldSuccess_WhenAllConditionsAreMet() {
             final var tempUser = new TempUser();
-            tempUser.setUserId("userId" );
-            tempUser.setEmail("email" );
+            tempUser.setUserId("userId");
+            tempUser.setEmail("email");
             tempUser.setOtp(otp);
 
             var expected = ConfirmRegisterResponse.builder()
@@ -496,11 +496,11 @@ public class AuthServiceTest {
         @Test
         void shouldSuccess_WhenAllConditionsAreMet() {
             final var accessToken = TokenModel.builder()
-                    .token("accessToken" )
+                    .token("accessToken")
                     .expiredAt(new Timestamp(System.currentTimeMillis() + 1000L))
                     .build();
             final var refreshToken = TokenModel.builder()
-                    .token("refreshToken" )
+                    .token("refreshToken")
                     .expiredAt(new Timestamp(System.currentTimeMillis() + 1000L))
                     .build();
 

@@ -134,7 +134,10 @@ public class AuthServiceImpl implements AuthService {
         log.info("Resend register otp with request: {}", request);
 
         var otp = otpRepo.findById(request.getOtpId())
-                .orElseThrow(() -> new NotFoundException(String.format("Otp id %s not found", request.getOtpId())));
+                .orElseThrow(() -> {
+                    log.warn("Otp id {} not found", request.getOtpId());
+                    return new NotFoundException(String.format("Otp id %s not found", request.getOtpId()));
+                });
 
         var otpConfig = otpHelper.getOtpConfig(OtpType.REGISTER);
 
@@ -167,14 +170,20 @@ public class AuthServiceImpl implements AuthService {
         log.info("Confirm register with request: {}", request);
 
         var otp = otpRepo.findByTokenAndType(request.getToken(), OtpType.REGISTER.getType())
-                .orElseThrow(() -> new NotFoundException(String.format("Otp with token %s not found", request.getToken())));
+                .orElseThrow(() -> {
+                    log.warn("Otp with token {} not found", request.getToken());
+                    return new NotFoundException(String.format("Otp with token %s not found", request.getToken()));
+                });
 
         // Validate OTP life time
         otpHelper.validateOtpLifeTime(otp);
 
         // Check duplicate email and username
         var tempUser = tempUserRepo.findByOtp(otp)
-                .orElseThrow(() -> new NotFoundException(String.format("Temp user with otp id %s not found", otp.getOtpId())));
+                .orElseThrow(() -> {
+                    log.warn("Temp user with otp id {} not found", otp.getOtpId());
+                    return new NotFoundException(String.format("Temp user with otp id %s not found", otp.getOtpId()));
+                });
 
         userHelper.validateEmail(tempUser.getEmail());
         userHelper.validateUsername(tempUser.getUsername());
