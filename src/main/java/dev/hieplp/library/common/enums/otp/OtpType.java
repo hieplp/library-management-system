@@ -4,8 +4,10 @@ import lombok.Getter;
 
 @Getter
 public enum OtpType {
+    UNKNOWN(-1),
     REGISTER(0),
-    FORGOT_PASSWORD(1);
+    FORGOT_PASSWORD(1),
+    ;
 
     private final Byte type;
 

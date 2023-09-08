@@ -4,6 +4,7 @@ import dev.hieplp.library.common.config.OtpConfig;
 import dev.hieplp.library.common.entity.Otp;
 import dev.hieplp.library.common.enums.otp.OtpStatus;
 import dev.hieplp.library.common.enums.otp.OtpType;
+import dev.hieplp.library.common.exception.UnknownException;
 import dev.hieplp.library.common.exception.otp.ExceededOtpQuotaException;
 import dev.hieplp.library.common.exception.otp.ExpiredOtpException;
 import dev.hieplp.library.common.helper.OtpHelper;
@@ -25,9 +26,15 @@ public class OtpHelperImpl implements OtpHelper {
 
     @Override
     public OtpConfig getOtpConfig(OtpType otpType) {
+        if (otpType == null) {
+            log.warn("otpType is null");
+            throw new UnknownException("otpType is null");
+        }
+
         return switch (otpType) {
             case REGISTER -> appConfig.getRegisterOtp();
             case FORGOT_PASSWORD -> appConfig.getForgotOtp();
+            default -> throw new UnknownException("Unsupported otpType");
         };
     }
 

@@ -4,6 +4,7 @@ import dev.hieplp.library.common.entity.User;
 import dev.hieplp.library.common.enums.user.UserStatus;
 import dev.hieplp.library.common.exception.NotFoundException;
 import dev.hieplp.library.common.exception.user.DuplicatedEmailException;
+import dev.hieplp.library.common.exception.user.DuplicatedUsernameException;
 import dev.hieplp.library.common.helper.UserHelper;
 import dev.hieplp.library.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class UserHelperImpl implements UserHelper {
     public void validateUsername(String username) {
         if (userRepo.existsByUsername(username)) {
             log.warn("Username {} is already in use", username);
-            throw new DuplicatedEmailException(String.format("Username %s is already in use", username));
+            throw new DuplicatedUsernameException(String.format("Username %s is already in use", username));
         }
     }
 
