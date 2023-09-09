@@ -33,9 +33,9 @@ public class AuthController {
     }
 
     @PostMapping("/resend-register-otp")
-    public ResponseEntity<CommonResponse> sendRegisterOtp(@Valid @RequestBody ResendRegisterOtpRequest request) {
+    public ResponseEntity<CommonResponse> resendRegisterOtp(@Valid @RequestBody ResendRegisterOtpRequest request) {
         log.info("Resend register otp with request: {}", request);
-        var data = authService.sendRegisterOtp(request);
+        var data = authService.resendRegisterOtp(request);
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, data));
     }
 

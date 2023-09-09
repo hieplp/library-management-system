@@ -262,7 +262,7 @@ public class AuthServiceTest {
         @Test
         void shouldThrowNotFoundException_WhenOtpIsNotFound() {
             doReturn(Optional.empty()).when(otpRepo).findById(otpId);
-            assertThrows(NotFoundException.class, () -> authService.sendRegisterOtp(request));
+            assertThrows(NotFoundException.class, () -> authService.resendRegisterOtp(request));
         }
 
         @Test
@@ -271,7 +271,7 @@ public class AuthServiceTest {
             doReturn(otpConfig).when(otpHelper).getOtpConfig(OtpType.REGISTER);
             doThrow(ExceededOtpQuotaException.class).when(otpHelper).validateResendOtpQuota(otp, otpConfig);
 
-            assertThrows(ExceededOtpQuotaException.class, () -> authService.sendRegisterOtp(request));
+            assertThrows(ExceededOtpQuotaException.class, () -> authService.resendRegisterOtp(request));
         }
 
         @Test
@@ -283,7 +283,7 @@ public class AuthServiceTest {
 
             doThrow(RuntimeException.class).when(otpRepo).save(any());
 
-            assertThrows(RuntimeException.class, () -> authService.sendRegisterOtp(request));
+            assertThrows(RuntimeException.class, () -> authService.resendRegisterOtp(request));
         }
 
         @Test
@@ -295,7 +295,7 @@ public class AuthServiceTest {
 
             doThrow(RuntimeException.class).when(emailUtil).sendMime(any(), any(), any(), any());
 
-            assertThrows(RuntimeException.class, () -> authService.sendRegisterOtp(request));
+            assertThrows(RuntimeException.class, () -> authService.resendRegisterOtp(request));
         }
 
         @Test
@@ -314,7 +314,7 @@ public class AuthServiceTest {
             doReturn(currentTime).when(dateTimeUtil).getCurrentTimestamp();
             doReturn(expiryTime).when(dateTimeUtil).addSeconds(currentTime, otpConfig.getExpirationTime());
 
-            var result = authService.sendRegisterOtp(request);
+            var result = authService.resendRegisterOtp(request);
             assertEquals(expected.getOtpId(), result.getOtpId());
             assertEquals(expected.getMaskedEmail(), result.getMaskedEmail());
             assertEquals(expected.getExpiryTime().getTime(), result.getExpiryTime().getTime());

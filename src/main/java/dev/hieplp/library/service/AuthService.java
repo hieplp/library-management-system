@@ -14,7 +14,7 @@ import dev.hieplp.library.payload.response.auth.register.ResendRegisterOtpRespon
 public interface AuthService {
     RequestToRegisterResponse requestToRegister(RequestToRegisterRequest request);
 
-    ResendRegisterOtpResponse sendRegisterOtp(ResendRegisterOtpRequest request);
+    ResendRegisterOtpResponse resendRegisterOtp(ResendRegisterOtpRequest request);
 
     ConfirmRegisterResponse confirmRegister(ConfirmRegisterRequest request);
 

@@ -130,7 +130,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional
-    public ResendRegisterOtpResponse sendRegisterOtp(ResendRegisterOtpRequest request) {
+    public ResendRegisterOtpResponse resendRegisterOtp(ResendRegisterOtpRequest request) {
         log.info("Resend register otp with request: {}", request);
 
         var otp = otpRepo.findById(request.getOtpId())
