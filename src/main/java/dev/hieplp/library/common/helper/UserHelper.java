@@ -8,5 +8,7 @@ public interface UserHelper {
 
     void validateEmail(String email);
 
+    User getUser(String userId) throws NotFoundException;
+
     User getActiveUser(String userId) throws NotFoundException;
 }

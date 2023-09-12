@@ -1,13 +1,12 @@
 package dev.hieplp.library.service.impl;
 
-import dev.hieplp.library.common.entity.Otp;
-import dev.hieplp.library.common.entity.Password;
-import dev.hieplp.library.common.entity.TempUser;
-import dev.hieplp.library.common.entity.User;
+import dev.hieplp.library.common.entity.*;
+import dev.hieplp.library.common.entity.key.UserRoleKey;
 import dev.hieplp.library.common.enums.IdLength;
 import dev.hieplp.library.common.enums.otp.OtpStatus;
 import dev.hieplp.library.common.enums.otp.OtpType;
 import dev.hieplp.library.common.enums.token.TokenType;
+import dev.hieplp.library.common.enums.user.Role;
 import dev.hieplp.library.common.enums.user.TempUserStatus;
 import dev.hieplp.library.common.enums.user.UserStatus;
 import dev.hieplp.library.common.exception.NotFoundException;
@@ -40,6 +39,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.PrivateKey;
+import java.util.HashSet;
 
 
 @Slf4j
@@ -197,11 +197,20 @@ public class AuthServiceImpl implements AuthService {
         // Save user information
         var userId = generatorUtil.generateId(IdLength.USER_ID);
 
+        var roles = new HashSet<UserRole>();
+        roles.add(UserRole.builder()
+                .id(UserRoleKey.builder()
+                        .userId(userId)
+                        .role(Role.USER.getRole())
+                        .build())
+                .build());
+
         var user = User.builder()
                 .userId(userId)
                 .username(tempUser.getUsername())
                 .email(tempUser.getEmail())
                 .status(UserStatus.ACTIVE.getStatus())
+                .roles(roles)
                 .createdBy(userId)
                 .createdAt(dateTimeUtil.getCurrentTimestamp())
                 .modifiedBy(userId)

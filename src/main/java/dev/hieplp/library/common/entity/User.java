@@ -1,8 +1,6 @@
 package dev.hieplp.library.common.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,6 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.sql.Timestamp;
+import java.util.Set;
 
 @Data
 @Entity
@@ -46,6 +45,6 @@ public class User {
 
     private Timestamp modifiedAt;
 
-//    @OneToOne(cascade = CascadeType.ALL, mappedBy = "user")
-//    private Password password;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private Set<UserRole> roles;
 }

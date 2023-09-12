@@ -36,6 +36,16 @@ public class UserHelperImpl implements UserHelper {
     }
 
     @Override
+    public User getUser(String userId) throws NotFoundException {
+        log.info("Get user with userId: {}", userId);
+        return userRepo.findById(userId)
+                .orElseThrow(() -> {
+                    log.warn("User not found with userId: {}", userId);
+                    return new NotFoundException("User not found");
+                });
+    }
+
+    @Override
     public User getActiveUser(String userId) throws NotFoundException {
         log.info("Get active user with userId: {}", userId);
 

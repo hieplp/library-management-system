@@ -1,4 +1,4 @@
-package dev.hieplp.library.payload.request.user;
+package dev.hieplp.library.payload.response.user;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
