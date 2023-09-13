@@ -20,6 +20,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.security.PrivateKey;
+import java.util.ArrayList;
+import java.util.Set;
 
 @Slf4j
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
@@ -43,7 +45,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         } finally {
             filterChain.doFilter(request, response);
         }
-//        filterChain.doFilter(request, response);
     }
 
     private String getAccessToken(HttpServletRequest request) {
@@ -73,6 +74,12 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         var userDetails = new UserPrincipal();
 
         var header = claims.getHeader();
+
+        // Copy roles from token to user details
+        var roles = header.get(TokenHeader.ROLES.getHeader());
+        @SuppressWarnings("unchecked")
+        var roleSet = Set.copyOf((ArrayList<Byte>) roles);
+        userDetails.setRoles(roleSet);
 
         // Copy userId from token to user details
         var userId = header.get(TokenHeader.USER_ID.getHeader());

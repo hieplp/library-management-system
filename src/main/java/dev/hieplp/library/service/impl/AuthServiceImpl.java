@@ -6,13 +6,14 @@ import dev.hieplp.library.common.enums.IdLength;
 import dev.hieplp.library.common.enums.otp.OtpStatus;
 import dev.hieplp.library.common.enums.otp.OtpType;
 import dev.hieplp.library.common.enums.token.TokenType;
-import dev.hieplp.library.common.enums.user.Role;
+import dev.hieplp.library.common.enums.user.UserRole;
 import dev.hieplp.library.common.enums.user.TempUserStatus;
 import dev.hieplp.library.common.enums.user.UserStatus;
 import dev.hieplp.library.common.exception.NotFoundException;
 import dev.hieplp.library.common.exception.UnauthorizedException;
 import dev.hieplp.library.common.exception.user.InvalidUserNameOrPasswordException;
 import dev.hieplp.library.common.helper.OtpHelper;
+import dev.hieplp.library.common.helper.RoleHelper;
 import dev.hieplp.library.common.helper.UserHelper;
 import dev.hieplp.library.common.model.TokenModel;
 import dev.hieplp.library.common.util.*;
@@ -56,6 +57,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final OtpHelper otpHelper;
     private final UserHelper userHelper;
+    private final RoleHelper roleHelper;
 
     private final MaskUtil maskUtil;
     private final EmailUtil emailUtil;
@@ -197,11 +199,11 @@ public class AuthServiceImpl implements AuthService {
         // Save user information
         var userId = generatorUtil.generateId(IdLength.USER_ID);
 
-        var roles = new HashSet<UserRole>();
-        roles.add(UserRole.builder()
+        var roles = new HashSet<dev.hieplp.library.common.entity.UserRole>();
+        roles.add(dev.hieplp.library.common.entity.UserRole.builder()
                 .id(UserRoleKey.builder()
                         .userId(userId)
-                        .role(Role.USER.getRole())
+                        .role(UserRole.USER.getRole())
                         .build())
                 .build());
 
@@ -255,8 +257,11 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidUserNameOrPasswordException();
         }
 
+        //  roles
+        var roles = roleHelper.getRolesByUserId(user.getUserId());
+
         // Generate accessToken and refreshToken
-        var accessToken = tokenUtil.generateToken(appConfig.getAccessToken(), tokenPrivateKey, TokenType.ACCESS_TOKEN, user);
+        var accessToken = tokenUtil.generateToken(appConfig.getAccessToken(), tokenPrivateKey, TokenType.ACCESS_TOKEN, user, roles);
         var refreshToken = tokenUtil.generateToken(appConfig.getRefreshToken(), tokenPrivateKey, TokenType.REFRESH_TOKEN, user);
 
         // Return response
@@ -278,7 +283,10 @@ public class AuthServiceImpl implements AuthService {
 
         var user = userRepo.findById(currentUser.getUserId())
                 .orElseThrow(() -> new UnauthorizedException("User not found"));
-        return tokenUtil.generateToken(appConfig.getAccessToken(), tokenPrivateKey, TokenType.ACCESS_TOKEN, user);
+
+        var roles = roleHelper.getRolesByUserId(user.getUserId());
+
+        return tokenUtil.generateToken(appConfig.getAccessToken(), tokenPrivateKey, TokenType.ACCESS_TOKEN, user, roles);
 
     }
 }

@@ -1,5 +1,6 @@
 package dev.hieplp.library.config;
 
+import dev.hieplp.library.common.enums.user.UserRole;
 import dev.hieplp.library.config.entry.TokenAuthenticationEntryPoint;
 import dev.hieplp.library.config.filter.TokenAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class SecurityConfig {
         return new TokenAuthenticationFilter();
     }
 
+
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
         http
@@ -34,6 +36,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers(new AntPathRequestMatcher("/auth/refresh-access-token")).authenticated()
                         .requestMatchers(new AntPathRequestMatcher("/auth/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAnyAuthority(UserRole.USER.getRoleAsString(), UserRole.ROOT.getRoleAsString())
                         .anyRequest().authenticated()
                 )
 

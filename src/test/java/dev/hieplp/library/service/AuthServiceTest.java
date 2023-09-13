@@ -8,6 +8,7 @@ import dev.hieplp.library.common.entity.User;
 import dev.hieplp.library.common.enums.IdLength;
 import dev.hieplp.library.common.enums.otp.OtpType;
 import dev.hieplp.library.common.enums.token.TokenType;
+import dev.hieplp.library.common.enums.user.UserRole;
 import dev.hieplp.library.common.exception.NotFoundException;
 import dev.hieplp.library.common.exception.UnauthorizedException;
 import dev.hieplp.library.common.exception.otp.ExceededOtpQuotaException;
@@ -16,6 +17,7 @@ import dev.hieplp.library.common.exception.user.DuplicatedEmailException;
 import dev.hieplp.library.common.exception.user.DuplicatedUsernameException;
 import dev.hieplp.library.common.exception.user.InvalidUserNameOrPasswordException;
 import dev.hieplp.library.common.helper.OtpHelper;
+import dev.hieplp.library.common.helper.RoleHelper;
 import dev.hieplp.library.common.helper.UserHelper;
 import dev.hieplp.library.common.model.TokenModel;
 import dev.hieplp.library.common.util.*;
@@ -49,6 +51,7 @@ import org.mockito.quality.Strictness;
 import java.sql.Timestamp;
 import java.util.Date;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -81,6 +84,8 @@ public class AuthServiceTest {
     private UserHelper userHelper;
     @Mock
     private OtpHelper otpHelper;
+    @Mock
+    private RoleHelper roleHelper;
 
     // Util
     @Mock
@@ -494,6 +499,15 @@ public class AuthServiceTest {
         }
 
         @Test
+        void shouldException_WhenGetRolesIsError() {
+            doReturn(Optional.of(user)).when(userRepo).findByUsername(username);
+            doReturn(Optional.of(password)).when(passwordRepo).findById(userId);
+            doReturn(true).when(encryptUtil).validatePassword(any(), any(), any(), any());
+            doThrow(RuntimeException.class).when(roleHelper).getRolesByUserId(userId);
+            assertThrows(RuntimeException.class, () -> authService.login(request));
+        }
+
+        @Test
         void shouldSuccess_WhenAllConditionsAreMet() {
             final var accessToken = TokenModel.builder()
                     .token("accessToken")
@@ -504,6 +518,8 @@ public class AuthServiceTest {
                     .expiredAt(new Timestamp(System.currentTimeMillis() + 1000L))
                     .build();
 
+            final var roles = Set.of(UserRole.ADMIN.getRole());
+
             final var expected = LoginResponse.builder()
                     .user(user)
                     .accessToken(accessToken)
@@ -513,7 +529,8 @@ public class AuthServiceTest {
             doReturn(Optional.of(user)).when(userRepo).findByUsername(username);
             doReturn(Optional.of(password)).when(passwordRepo).findById(userId);
             doReturn(true).when(encryptUtil).validatePassword(any(), any(), any(), any());
-            doReturn(accessToken).when(tokenUtil).generateToken(any(), any(), eq(TokenType.ACCESS_TOKEN), any());
+            doReturn(roles).when(roleHelper).getRolesByUserId(userId);
+            doReturn(accessToken).when(tokenUtil).generateToken(any(), any(), eq(TokenType.ACCESS_TOKEN), any(), eq(roles));
             doReturn(refreshToken).when(tokenUtil).generateToken(any(), any(), eq(TokenType.REFRESH_TOKEN), any());
 
             var result = authService.login(request);
@@ -548,6 +565,18 @@ public class AuthServiceTest {
         }
 
         @Test
+        void shouldThrowException_WhenGetRolesIsError() {
+            final var user = new User();
+            user.setUserId(userId);
+
+            doReturn(userId).when(currentUser).getUserId();
+            doReturn(TokenType.REFRESH_TOKEN.getType()).when(currentUser).getTokenType();
+            doReturn(Optional.of(user)).when(userRepo).findById(userId);
+            doThrow(RuntimeException.class).when(roleHelper).getRolesByUserId(userId);
+            assertThrows(RuntimeException.class, () -> authService.refreshAccessToken(request));
+        }
+
+        @Test
         void shouldSuccess_WhenAllConditionsAreMet() {
             final var token = "token";
             final var currentDate = new Date();
@@ -555,6 +584,8 @@ public class AuthServiceTest {
 
             final var user = new User();
             user.setUserId(userId);
+
+            final var roles = Set.of(UserRole.USER.getRole());
 
             final var expected = TokenModel.builder()
                     .token(token)
@@ -564,7 +595,8 @@ public class AuthServiceTest {
             doReturn(userId).when(currentUser).getUserId();
             doReturn(TokenType.REFRESH_TOKEN.getType()).when(currentUser).getTokenType();
             doReturn(Optional.of(user)).when(userRepo).findById(userId);
-            doReturn(expected).when(tokenUtil).generateToken(any(), any(), eq(TokenType.ACCESS_TOKEN), any());
+            doReturn(roles).when(roleHelper).getRolesByUserId(userId);
+            doReturn(expected).when(tokenUtil).generateToken(any(), any(), eq(TokenType.ACCESS_TOKEN), any(), eq(roles));
 
             var result = authService.refreshAccessToken(request);
             assertEquals(expected.getToken(), result.getToken());

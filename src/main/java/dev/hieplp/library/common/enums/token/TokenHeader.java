@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum TokenHeader {
     USER_ID("user"),
     TOKEN_TYPE("tokenType"),
-    ;
+    ROLES("roles");
 
     private final String header;
 

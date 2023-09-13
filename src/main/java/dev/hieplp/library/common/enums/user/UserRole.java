@@ -3,7 +3,7 @@ package dev.hieplp.library.common.enums.user;
 import lombok.Getter;
 
 @Getter
-public enum Role {
+public enum UserRole {
     ROOT(0),
     ADMIN(1),
     USER(2),
@@ -11,7 +11,11 @@ public enum Role {
 
     private final Byte role;
 
-    Role(Integer role) {
+    UserRole(Integer role) {
         this.role = role.byteValue();
+    }
+
+    public String getRoleAsString() {
+        return role.toString();
     }
 }

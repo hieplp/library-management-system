@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.PrivateKey;
 import java.util.HashMap;
+import java.util.Set;
 
 @Slf4j
 @Component
@@ -24,9 +25,9 @@ public class TokenUtil {
     public TokenModel generateToken(TokenConfig tokenConfig,
                                     PrivateKey privateKey,
                                     TokenType tokenType,
-                                    User user) {
+                                    User user,
+                                    Set<Byte> roles) {
         log.info("Generating token with user: {}, tokenType: {} and tokenConfig: {}", user, tokenType, tokenConfig);
-
 
         // Expiration time
         var currentDate = dateTimeUtil.getCurrentDate();
@@ -36,6 +37,11 @@ public class TokenUtil {
         var headers = new HashMap<String, Object>();
         headers.put(TokenHeader.USER_ID.getHeader(), user.getUserId());
         headers.put(TokenHeader.TOKEN_TYPE.getHeader(), tokenType.getType());
+
+        // Roles
+        if (roles != null && !roles.isEmpty()) {
+            headers.put(TokenHeader.ROLES.getHeader(), roles);
+        }
 
         // JWT builder
         var jwt = Jwts.builder()
@@ -52,6 +58,13 @@ public class TokenUtil {
                 .token(jwt)
                 .expiredAt(expiredAt)
                 .build();
+    }
+
+    public TokenModel generateToken(TokenConfig tokenConfig,
+                                    PrivateKey privateKey,
+                                    TokenType tokenType,
+                                    User user) {
+        return generateToken(tokenConfig, privateKey, tokenType, user, null);
     }
 
     public Jws<Claims> parseToken(String token, PrivateKey privateKey) {
