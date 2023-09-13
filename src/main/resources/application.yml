@@ -5,6 +5,8 @@ server:
     include-binding-errors: always
 
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: library-system
   datasource:

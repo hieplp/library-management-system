@@ -18,11 +18,11 @@ public class UserPrincipal implements UserDetails {
     private String userId;
     private String token;
     private Byte tokenType;
-    private Set<Byte> roles;
+    private Set<Integer> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        log.info("Get authorities of user: {}", userId);
+        log.debug("Get authorities of user: {}", userId);
         var authorities = new ArrayList<GrantedAuthority>();
         roles.forEach(userRole -> authorities.add(new SimpleGrantedAuthority(userRole.toString())));
         return authorities;

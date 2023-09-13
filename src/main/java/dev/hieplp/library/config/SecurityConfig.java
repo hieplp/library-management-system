@@ -3,7 +3,9 @@ package dev.hieplp.library.config;
 import dev.hieplp.library.common.enums.user.UserRole;
 import dev.hieplp.library.config.entry.TokenAuthenticationEntryPoint;
 import dev.hieplp.library.config.filter.TokenAuthenticationFilter;
+import dev.hieplp.library.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -14,18 +16,19 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     private final TokenAuthenticationEntryPoint tokenAuthenticationEntryPoint;
+    private final UserRepository userRepo;
 
     @Bean
     public TokenAuthenticationFilter tokenAuthenticationFilter() {
         return new TokenAuthenticationFilter();
     }
-
 
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
@@ -36,13 +39,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers(new AntPathRequestMatcher("/auth/refresh-access-token")).authenticated()
                         .requestMatchers(new AntPathRequestMatcher("/auth/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAnyAuthority(UserRole.USER.getRoleAsString(), UserRole.ROOT.getRoleAsString())
+                        .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAnyAuthority(UserRole.ADMIN.getRoleAsString(), UserRole.ROOT.getRoleAsString())
                         .anyRequest().authenticated()
                 )
 
                 // Exception handling
-                .exceptionHandling(exceptionHandling -> exceptionHandling
-                        .authenticationEntryPoint(tokenAuthenticationEntryPoint))
+                .exceptionHandling(exceptionHandling -> exceptionHandling.authenticationEntryPoint(tokenAuthenticationEntryPoint))
 
                 // Filter
                 .addFilterBefore(tokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)

@@ -64,7 +64,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         // Update current user
         setCurrentUser(userDetails);
 
-        var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, null);
+        var authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -78,7 +78,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         // Copy roles from token to user details
         var roles = header.get(TokenHeader.ROLES.getHeader());
         @SuppressWarnings("unchecked")
-        var roleSet = Set.copyOf((ArrayList<Byte>) roles);
+        var roleSet = Set.copyOf((ArrayList<Integer>) roles);
         userDetails.setRoles(roleSet);
 
         // Copy userId from token to user details
