@@ -1,20 +1,22 @@
 package dev.hieplp.library.service.impl;
 
-import dev.hieplp.library.common.entity.Otp;
 import dev.hieplp.library.common.entity.Password;
 import dev.hieplp.library.common.entity.TempUser;
 import dev.hieplp.library.common.entity.User;
+import dev.hieplp.library.common.entity.UserRole;
 import dev.hieplp.library.common.entity.key.UserRoleKey;
 import dev.hieplp.library.common.enums.IdLength;
 import dev.hieplp.library.common.enums.otp.OtpStatus;
 import dev.hieplp.library.common.enums.otp.OtpType;
 import dev.hieplp.library.common.enums.token.TokenType;
+import dev.hieplp.library.common.enums.user.Role;
 import dev.hieplp.library.common.enums.user.TempUserStatus;
-import dev.hieplp.library.common.enums.user.UserRole;
 import dev.hieplp.library.common.enums.user.UserStatus;
+import dev.hieplp.library.common.exception.BadRequestException;
 import dev.hieplp.library.common.exception.NotFoundException;
 import dev.hieplp.library.common.exception.UnauthorizedException;
 import dev.hieplp.library.common.exception.user.InvalidUserNameOrPasswordException;
+import dev.hieplp.library.common.exception.user.NotVerifiedException;
 import dev.hieplp.library.common.helper.OtpHelper;
 import dev.hieplp.library.common.helper.RoleHelper;
 import dev.hieplp.library.common.helper.UserHelper;
@@ -27,10 +29,16 @@ import dev.hieplp.library.payload.request.auth.RefreshAccessTokenRequest;
 import dev.hieplp.library.payload.request.auth.register.ConfirmRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.RequestToRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.ResendRegisterOtpRequest;
+import dev.hieplp.library.payload.request.auth.verify.ConfirmVerifyRequest;
+import dev.hieplp.library.payload.request.auth.verify.RequestToVerifyRequest;
+import dev.hieplp.library.payload.request.auth.verify.ResendVerifyOtpRequest;
 import dev.hieplp.library.payload.response.auth.LoginResponse;
 import dev.hieplp.library.payload.response.auth.register.ConfirmRegisterResponse;
 import dev.hieplp.library.payload.response.auth.register.RequestToRegisterResponse;
 import dev.hieplp.library.payload.response.auth.register.ResendRegisterOtpResponse;
+import dev.hieplp.library.payload.response.auth.verify.ConfirmVerifyResponse;
+import dev.hieplp.library.payload.response.auth.verify.RequestToVerifyResponse;
+import dev.hieplp.library.payload.response.auth.verify.ResendVerifyOtpResponse;
 import dev.hieplp.library.repository.OtpRepository;
 import dev.hieplp.library.repository.PasswordRepository;
 import dev.hieplp.library.repository.TempUserRepository;
@@ -74,7 +82,6 @@ public class AuthServiceImpl implements AuthService {
     private final PrivateKey passwordPrivateKey;
     private final JavaMailSender javaMailSender;
 
-
     @Override
     @Transactional
     public RequestToRegisterResponse requestToRegister(RequestToRegisterRequest request) {
@@ -88,23 +95,8 @@ public class AuthServiceImpl implements AuthService {
         otpHelper.validateOtpQuota(request.getEmail(), OtpType.REGISTER);
 
         // Save otp
-        var otpId = generatorUtil.generateId(IdLength.OTP_ID);
-        var token = generatorUtil.generateToken();
-        var otpConfig = otpHelper.getOtpConfig(OtpType.REGISTER);
-        var currentTime = dateTimeUtil.getCurrentTimestamp();
-        var expiryTime = dateTimeUtil.addSeconds(currentTime, otpConfig.getExpirationTime());
-        var otp = Otp.builder()
-                .otpId(otpId)
-                .type(OtpType.REGISTER.getType())
-                .sendTo(request.getEmail())
-                .token(token)
-                .issueTime(currentTime)
-                .expiryTime(expiryTime)
-                .resendCount(0)
-                .createdAt(currentTime)
-                .modifiedAt(currentTime)
-                .status(OtpStatus.PENDING.getStatus())
-                .build();
+        var otp = otpHelper.initOtp(OtpType.REGISTER, request.getEmail());
+        otpRepo.save(otp);
 
         // Save temporary user
         var salt = generatorUtil.generateSalt();
@@ -122,14 +114,14 @@ public class AuthServiceImpl implements AuthService {
         tempUserRepo.save(tempUser);
 
         // Send email
-        emailUtil.sendMime(javaMailSender, request.getEmail(), "Confirm register OTP", token);
+        emailUtil.sendMime(javaMailSender, request.getEmail(), "Confirm register OTP", otp.getToken());
 
         // Return response
         return RequestToRegisterResponse.builder()
-                .otpId(otpId)
+                .otpId(otp.getOtpId())
                 .maskedEmail(maskUtil.maskEmail(request.getEmail()))
-                .expiryTime(expiryTime)
-                .issuedTime(currentTime)
+                .expiryTime(otp.getExpiryTime())
+                .issuedTime(otp.getIssueTime())
                 .build();
     }
 
@@ -138,11 +130,7 @@ public class AuthServiceImpl implements AuthService {
     public ResendRegisterOtpResponse resendRegisterOtp(ResendRegisterOtpRequest request) {
         log.info("Resend register otp with request: {}", request);
 
-        var otp = otpRepo.findById(request.getOtpId())
-                .orElseThrow(() -> {
-                    log.warn("Otp id {} not found", request.getOtpId());
-                    return new NotFoundException(String.format("Otp id %s not found", request.getOtpId()));
-                });
+        var otp = otpHelper.getOtp(request.getOtpId());
 
         var otpConfig = otpHelper.getOtpConfig(OtpType.REGISTER);
 
@@ -174,11 +162,7 @@ public class AuthServiceImpl implements AuthService {
     public ConfirmRegisterResponse confirmRegister(ConfirmRegisterRequest request) {
         log.info("Confirm register with request: {}", request);
 
-        var otp = otpRepo.findByTokenAndType(request.getToken(), OtpType.REGISTER.getType())
-                .orElseThrow(() -> {
-                    log.warn("Otp with token {} not found", request.getToken());
-                    return new NotFoundException(String.format("Otp with token %s not found", request.getToken()));
-                });
+        var otp = otpHelper.getOtpByTokenAndType(request.getToken(), OtpType.REGISTER);
 
         // Validate OTP life time
         otpHelper.validateOtpLifeTime(otp);
@@ -202,11 +186,11 @@ public class AuthServiceImpl implements AuthService {
         // Save user information
         var userId = generatorUtil.generateId(IdLength.USER_ID);
 
-        var roles = new HashSet<dev.hieplp.library.common.entity.UserRole>();
-        roles.add(dev.hieplp.library.common.entity.UserRole.builder()
+        var roles = new HashSet<UserRole>();
+        roles.add(UserRole.builder()
                 .id(UserRoleKey.builder()
                         .userId(userId)
-                        .role(UserRole.USER.getRole())
+                        .role(Role.USER.getRole())
                         .build())
                 .build());
 
@@ -246,6 +230,18 @@ public class AuthServiceImpl implements AuthService {
                     log.warn("User with username {} not found", request.getUsername());
                     return new InvalidUserNameOrPasswordException();
                 });
+
+        if (UserStatus.INACTIVE.getStatus().equals(user.getStatus())) {
+            var message = String.format("User %s is inactive", user.getUserId());
+            log.warn(message);
+            throw new UnauthorizedException(message);
+        }
+
+        if (UserStatus.NOT_VERIFIED.getStatus().equals(user.getStatus())) {
+            var message = String.format("User %s not verified", user.getUserId());
+            log.warn(message);
+            throw new NotVerifiedException(message);
+        }
 
         var password = passwordRepo.findById(user.getUserId())
                 .orElseThrow(() -> {
@@ -291,5 +287,124 @@ public class AuthServiceImpl implements AuthService {
 
         return tokenUtil.generateToken(appConfig.getAccessToken(), tokenPrivateKey, TokenType.ACCESS_TOKEN, user, roles);
 
+    }
+
+    @Override
+    public RequestToVerifyResponse requestToVerify(RequestToVerifyRequest request) {
+        log.info("Request to verify: {}", request);
+
+        var user = userRepo.findByUsernameAndEmail(request.getUsername(), request.getEmail())
+                .orElseThrow(() -> {
+                    var message = String.format("User with username %s and email %s not found", request.getUsername(), request.getEmail());
+                    log.warn(message);
+                    return new NotFoundException(message);
+                });
+
+        if (!UserStatus.NOT_VERIFIED.getStatus().equals(user.getStatus())) {
+            var message = String.format("User %s is not not_verified", user.getUserId());
+            log.warn(message);
+            throw new BadRequestException(message);
+        }
+
+        // Check quota for today
+        otpHelper.validateOtpQuota(user.getEmail(), OtpType.VERIFY);
+
+        // Save otp
+        var otp = otpHelper.initOtp(OtpType.VERIFY, user.getEmail());
+        otpRepo.save(otp);
+
+        // Send email
+        emailUtil.sendMime(javaMailSender, user.getEmail(), "Confirm verify OTP", otp.getToken());
+
+        // Return response
+        return RequestToVerifyResponse.builder()
+                .otpId(otp.getOtpId())
+                .maskedEmail(maskUtil.maskEmail(request.getEmail()))
+                .expiryTime(otp.getExpiryTime())
+                .issuedTime(otp.getIssueTime())
+                .build();
+    }
+
+    @Override
+    public ResendVerifyOtpResponse resendVerifyOtp(ResendVerifyOtpRequest request) {
+        log.info("Resend verify otp with request: {}", request);
+
+        var otp = otpHelper.getOtp(request.getOtpId());
+        var otpConfig = otpHelper.getOtpConfig(OtpType.VERIFY);
+
+        // Check resend quota for today
+        otpHelper.validateResendOtpQuota(otp, otpConfig);
+
+        // Increase resend count
+        otp
+                .setResendCount(otp.getResendCount() + 1)
+                .setModifiedAt(dateTimeUtil.getCurrentTimestamp());
+        otpRepo.save(otp);
+
+        // Resend email
+        emailUtil.sendMime(javaMailSender, otp.getSendTo(), "Resend Verify OTP", otp.getToken());
+
+        // Return response
+        return ResendVerifyOtpResponse.builder()
+                .otpId(otp.getOtpId())
+                .maskedEmail(maskUtil.maskEmail(otp.getSendTo()))
+                .expiryTime(otp.getExpiryTime())
+                .issuedTime(otp.getIssueTime())
+                .resendCount(otp.getResendCount())
+                .resendQuota(otpConfig.getResendQuota())
+                .build();
+    }
+
+    @Override
+    public ConfirmVerifyResponse confirmVerify(ConfirmVerifyRequest request) {
+        log.info("Confirm verify with request: {}", request);
+
+        var otp = otpHelper.getOtpByTokenAndType(request.getToken(), OtpType.VERIFY);
+
+        // Validate OTP life time
+        otpHelper.validateOtpLifeTime(otp);
+
+        //
+        var user = userRepo.findByEmail(otp.getSendTo())
+                .orElseThrow(() -> {
+                    var message = String.format("User with email %s not found", otp.getSendTo());
+                    log.warn(message);
+                    return new NotFoundException(message);
+                });
+
+        if (!UserStatus.NOT_VERIFIED.getStatus().equals(user.getStatus())) {
+            var message = String.format("User %s is not not verified", user.getUserId());
+            log.warn(message);
+            throw new BadRequestException(message);
+        }
+
+        // Update OTP status
+        otp
+                .setStatus(OtpStatus.USED.getStatus())
+                .setModifiedAt(dateTimeUtil.getCurrentTimestamp());
+        otpRepo.save(otp);
+
+        // Verify user
+        user
+                .setStatus(UserStatus.ACTIVE.getStatus())
+                .setModifiedBy(user.getUserId())
+                .setModifiedAt(dateTimeUtil.getCurrentTimestamp());
+
+        // Update password
+        var salt = generatorUtil.generateSalt();
+        var password = encryptUtil.generatePassword(request.getPassword(), passwordPrivateKey, salt);
+        var passwordEntity = Password.builder()
+                .userId(user.getUserId())
+                .password(password)
+                .salt(salt)
+                .user(user)
+                .build();
+
+        passwordRepo.save(passwordEntity);
+
+        // Return response
+        return ConfirmVerifyResponse.builder()
+                .maskedEmail(maskUtil.maskEmail(user.getEmail()))
+                .build();
     }
 }

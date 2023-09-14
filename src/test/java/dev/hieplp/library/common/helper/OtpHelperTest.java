@@ -2,13 +2,16 @@ package dev.hieplp.library.common.helper;
 
 import dev.hieplp.library.common.config.OtpConfig;
 import dev.hieplp.library.common.entity.Otp;
+import dev.hieplp.library.common.enums.IdLength;
 import dev.hieplp.library.common.enums.otp.OtpStatus;
 import dev.hieplp.library.common.enums.otp.OtpType;
+import dev.hieplp.library.common.exception.NotFoundException;
 import dev.hieplp.library.common.exception.UnknownException;
 import dev.hieplp.library.common.exception.otp.ExceededOtpQuotaException;
 import dev.hieplp.library.common.exception.otp.ExpiredOtpException;
 import dev.hieplp.library.common.helper.impl.OtpHelperImpl;
 import dev.hieplp.library.common.util.DateTimeUtil;
+import dev.hieplp.library.common.util.GeneratorUtil;
 import dev.hieplp.library.config.AppConfig;
 import dev.hieplp.library.repository.OtpRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -24,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import java.sql.Timestamp;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -44,6 +48,8 @@ public class OtpHelperTest {
 
     @Mock
     private DateTimeUtil dateTimeUtil;
+    @Mock
+    private GeneratorUtil generatorUtil;
 
     @BeforeAll
     public static void setup() {
@@ -88,6 +94,96 @@ public class OtpHelperTest {
             assertEquals(otpConfig, otpHelper.getOtpConfig(otpType));
         }
 
+        @Test
+        void shouldReturnVerify_WhenOtpTypeIsVerify() {
+            final var otpType = OtpType.VERIFY;
+            doReturn(otpConfig).when(appConfig).getVerifyOtp();
+
+            assertEquals(otpConfig, otpHelper.getOtpConfig(otpType));
+        }
+    }
+
+    @Nested
+    class InitOtpTest {
+        @Test
+        void shouldSuccess_WhenAllConditionsAreMet() {
+            final var otpId = "otpId";
+            final var otpType = OtpType.REGISTER;
+            final var sendTo = "sendTo";
+            final var token = "token";
+            final var currentTime = new Timestamp(System.currentTimeMillis());
+            final var expiryTime = new Timestamp(currentTime.getTime() + 1000L);
+
+            final var otpConfig = new OtpConfig();
+            otpConfig.setExpirationTime(1000);
+
+            final var expected = Otp.builder()
+                    .otpId(otpId)
+                    .type(otpType.getType())
+                    .sendTo(sendTo)
+                    .token("token")
+                    .issueTime(currentTime)
+                    .expiryTime(expiryTime)
+                    .resendCount(0)
+                    .createdAt(currentTime)
+                    .modifiedAt(currentTime)
+                    .status(OtpStatus.PENDING.getStatus())
+                    .build();
+
+            final var spyOtpHelper = Mockito.spy(otpHelper);
+
+            doReturn(otpId).when(generatorUtil).generateId(IdLength.OTP_ID);
+            doReturn(otpConfig).when(spyOtpHelper).getOtpConfig(otpType);
+            doReturn(token).when(generatorUtil).generateToken();
+            doReturn(currentTime).when(dateTimeUtil).getCurrentTimestamp();
+            doReturn(currentTime).when(dateTimeUtil).getCurrentTimestamp();
+            doReturn(expiryTime).when(dateTimeUtil).addSeconds(currentTime, otpConfig.getExpirationTime());
+
+            assertEquals(expected, spyOtpHelper.initOtp(otpType, sendTo));
+        }
+    }
+
+    @Nested
+    class GetOtpTest {
+        final String otpId = "otpId";
+
+        @Test
+        void shouldThrowNotFoundException_WhenOtpIsNotFound() {
+            doReturn(Optional.empty()).when(otpRepo).findById(otpId);
+            assertThrows(NotFoundException.class, () -> otpHelper.getOtp(otpId));
+        }
+
+        @Test
+        void shouldSuccess_WhenAllConditionsAreMet() {
+            final var otp = new Otp()
+                    .setOtpId(otpId);
+            doReturn(Optional.of(otp)).when(otpRepo).findById(otpId);
+            assertEquals(otp, otpHelper.getOtp(otpId));
+        }
+    }
+
+    @Nested
+    class GetOtpByTokenAndTypeTest {
+        private final String token = "token";
+
+        @Test
+        void shouldThrowNotFoundException_WhenOtpIsNotFound() {
+            final var otpType = OtpType.REGISTER;
+            doReturn(Optional.empty()).when(otpRepo).findByTokenAndType(token, otpType.getType());
+            assertThrows(NotFoundException.class, () -> otpHelper.getOtpByTokenAndType(token, otpType));
+        }
+
+        @Test
+        void shouldSuccess_WhenAllConditionsAreMet() {
+            final var otpType = OtpType.VERIFY;
+            final var otp = new Otp()
+                    .setToken(token)
+                    .setType(otpType.getType());
+
+            doReturn(Optional.of(otp)).when(otpRepo).findByTokenAndType(token, otpType.getType());
+
+            assertEquals(otp, otpHelper.getOtpByTokenAndType(token, otpType));
+        }
     }
 
     @Nested

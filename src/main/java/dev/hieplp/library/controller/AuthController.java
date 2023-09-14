@@ -7,6 +7,9 @@ import dev.hieplp.library.payload.request.auth.RefreshAccessTokenRequest;
 import dev.hieplp.library.payload.request.auth.register.ConfirmRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.RequestToRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.ResendRegisterOtpRequest;
+import dev.hieplp.library.payload.request.auth.verify.ConfirmVerifyRequest;
+import dev.hieplp.library.payload.request.auth.verify.RequestToVerifyRequest;
+import dev.hieplp.library.payload.request.auth.verify.ResendVerifyOtpRequest;
 import dev.hieplp.library.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +60,27 @@ public class AuthController {
     public ResponseEntity<CommonResponse> refreshAccessToken(@Valid @RequestBody RefreshAccessTokenRequest request) {
         log.info("Refresh access token with request: {}", request);
         var data = authService.refreshAccessToken(request);
+        return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, data));
+    }
+
+    @PostMapping("/request-to-verify")
+    public ResponseEntity<CommonResponse> requestToVerify(@Valid @RequestBody RequestToVerifyRequest request) {
+        log.info("Request to verify: {}", request);
+        var data = authService.requestToVerify(request);
+        return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, data));
+    }
+
+    @PostMapping("/resend-verify-otp")
+    public ResponseEntity<CommonResponse> resendRegisterOtp(@Valid @RequestBody ResendVerifyOtpRequest request) {
+        log.info("Resend verify otp with request: {}", request);
+        var data = authService.resendVerifyOtp(request);
+        return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, data));
+    }
+
+    @PostMapping("/confirm-verify")
+    public ResponseEntity<CommonResponse> confirmRegister(@Valid @RequestBody ConfirmVerifyRequest request) {
+        log.info("Confirm verify with request: {}", request);
+        var data = authService.confirmVerify(request);
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, data));
     }
 }

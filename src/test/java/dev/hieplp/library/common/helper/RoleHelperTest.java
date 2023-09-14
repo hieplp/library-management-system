@@ -1,7 +1,7 @@
 package dev.hieplp.library.common.helper;
 
 import dev.hieplp.library.common.entity.key.UserRoleKey;
-import dev.hieplp.library.common.enums.user.UserRole;
+import dev.hieplp.library.common.enums.user.Role;
 import dev.hieplp.library.common.helper.impl.RoleHelperImpl;
 import dev.hieplp.library.repository.UserRoleRepository;
 import org.junit.jupiter.api.BeforeAll;
@@ -55,11 +55,11 @@ public class RoleHelperTest {
             var userRole = new dev.hieplp.library.common.entity.UserRole();
             userRole.setId(UserRoleKey.builder()
                     .userId(USER_ID)
-                    .role(UserRole.USER.getRole())
+                    .role(Role.USER.getRole())
                     .build());
             roles.add(userRole);
 
-            var expected = Set.of(UserRole.USER.getRole());
+            var expected = Set.of(Role.USER.getRole());
 
             doReturn(roles).when(userRoleRepo).getRolesByUserId(USER_ID);
 

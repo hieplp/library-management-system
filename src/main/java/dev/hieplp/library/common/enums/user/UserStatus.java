@@ -9,6 +9,7 @@ import java.util.Arrays;
 public enum UserStatus {
     INACTIVE(0),
     ACTIVE(1),
+    NOT_VERIFIED(2),
     ;
 
     private final Byte status;

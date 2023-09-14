@@ -7,6 +7,12 @@ import dev.hieplp.library.common.enums.otp.OtpType;
 public interface OtpHelper {
     OtpConfig getOtpConfig(OtpType otpType);
 
+    Otp initOtp(OtpType otpType, String sendTo);
+
+    Otp getOtp(String otpId);
+
+    Otp getOtpByTokenAndType(String token, OtpType otpType);
+
     void validateOtpQuota(String sendTo, OtpType otpType);
 
     void validateResendOtpQuota(Otp otp, OtpConfig otpConfig);

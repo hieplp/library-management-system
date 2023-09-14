@@ -40,6 +40,11 @@ app:
     wrong-quota: 3
     resend-quota: 3
     expiration-time: 3600
+  verify-otp:
+    quota: 5
+    wrong-quota: 3
+    resend-quota: 3
+    expiration-time: 3600
   password-rsa:
     private-key: rsa/private_key.der
     public-key: rsa/public_key.der

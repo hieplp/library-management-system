@@ -1,6 +1,6 @@
 package dev.hieplp.library.config;
 
-import dev.hieplp.library.common.enums.user.UserRole;
+import dev.hieplp.library.common.enums.user.Role;
 import dev.hieplp.library.config.entry.TokenAuthenticationEntryPoint;
 import dev.hieplp.library.config.filter.TokenAuthenticationFilter;
 import dev.hieplp.library.repository.UserRepository;
@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -39,7 +40,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers(new AntPathRequestMatcher("/auth/refresh-access-token")).authenticated()
                         .requestMatchers(new AntPathRequestMatcher("/auth/**")).permitAll()
-                        .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAnyAuthority(UserRole.ADMIN.getRoleAsString(), UserRole.ROOT.getRoleAsString())
+
+                        // Admin
+                        .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAnyAuthority(Role.ADMIN.getRoleAsString(), Role.ROOT.getRoleAsString())
+                        .requestMatchers(new AntPathRequestMatcher("/admin/users/**", HttpMethod.POST.name())).hasAuthority(Role.ROOT.getRoleAsString())
+
+                        //
                         .anyRequest().authenticated()
                 )
 

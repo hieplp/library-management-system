@@ -16,6 +16,7 @@ public enum ErrorCode implements ResponseCode {
     USER_DUPLICATED_EMAIL("USER_4001", "Email already exists"),
     USER_DUPLICATE_USERNAME("USER_4002", "Username already exists"),
     USER_INVALID_PASSWORD_OR_USERNAME("USER_4003", "Invalid password or username"),
+    USER_NOT_VERIFIED("USER_4004", "User not verified"),
     ;
 
     private final String code;

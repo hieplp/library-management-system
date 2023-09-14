@@ -4,6 +4,7 @@ import dev.hieplp.library.common.enums.response.ErrorCode;
 import dev.hieplp.library.common.exception.user.DuplicatedEmailException;
 import dev.hieplp.library.common.exception.user.DuplicatedUsernameException;
 import dev.hieplp.library.common.exception.user.InvalidUserNameOrPasswordException;
+import dev.hieplp.library.common.exception.user.NotVerifiedException;
 import dev.hieplp.library.common.payload.response.CommonResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
@@ -39,5 +40,13 @@ public class UserExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(new CommonResponse(ErrorCode.USER_INVALID_PASSWORD_OR_USERNAME));
+    }
+
+    @ExceptionHandler(NotVerifiedException.class)
+    public ResponseEntity<CommonResponse> handleNotVerifiedException(NotVerifiedException e) {
+        log.debug("NotVerifiedException: {}", e.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(new CommonResponse(ErrorCode.USER_NOT_VERIFIED));
     }
 }

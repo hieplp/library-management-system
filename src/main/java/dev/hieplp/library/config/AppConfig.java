@@ -19,6 +19,7 @@ public class AppConfig {
 
     private OtpConfig registerOtp;
     private OtpConfig forgotOtp;
+    private OtpConfig verifyOtp;
     private RsaConfig passwordRsa;
     private RsaConfig tokenRsa;
     private TokenConfig accessToken;
