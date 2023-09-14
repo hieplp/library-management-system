@@ -1,6 +1,9 @@
 package dev.hieplp.library.common.enums.user;
 
+import dev.hieplp.library.common.exception.UnknownException;
 import lombok.Getter;
+
+import java.util.Arrays;
 
 @Getter
 public enum Role {
@@ -15,7 +18,15 @@ public enum Role {
         this.role = role.byteValue();
     }
 
+    public static Role fromRole(Byte role) {
+        return Arrays.stream(values())
+                .filter(value -> value.role.equals(role))
+                .findFirst()
+                .orElseThrow(() -> new UnknownException("Unknown user role"));
+    }
+
     public String getRoleAsString() {
         return role.toString();
     }
+
 }

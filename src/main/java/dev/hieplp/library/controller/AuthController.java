@@ -71,14 +71,14 @@ public class AuthController {
     }
 
     @PostMapping("/resend-verify-otp")
-    public ResponseEntity<CommonResponse> resendRegisterOtp(@Valid @RequestBody ResendVerifyOtpRequest request) {
+    public ResponseEntity<CommonResponse> resendVerifyOtp(@Valid @RequestBody ResendVerifyOtpRequest request) {
         log.info("Resend verify otp with request: {}", request);
         var data = authService.resendVerifyOtp(request);
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, data));
     }
 
     @PostMapping("/confirm-verify")
-    public ResponseEntity<CommonResponse> confirmRegister(@Valid @RequestBody ConfirmVerifyRequest request) {
+    public ResponseEntity<CommonResponse> confirmVerify(@Valid @RequestBody ConfirmVerifyRequest request) {
         log.info("Confirm verify with request: {}", request);
         var data = authService.confirmVerify(request);
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, data));

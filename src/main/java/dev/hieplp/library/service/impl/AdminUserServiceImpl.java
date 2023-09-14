@@ -5,6 +5,7 @@ import dev.hieplp.library.common.entity.User;
 import dev.hieplp.library.common.entity.UserRole;
 import dev.hieplp.library.common.entity.key.UserRoleKey;
 import dev.hieplp.library.common.enums.IdLength;
+import dev.hieplp.library.common.enums.user.Role;
 import dev.hieplp.library.common.enums.user.UserStatus;
 import dev.hieplp.library.common.helper.UserHelper;
 import dev.hieplp.library.common.util.DateTimeUtil;
@@ -61,12 +62,29 @@ public class AdminUserServiceImpl implements AdminUserService {
 
         // Init roles
         var roles = new HashSet<UserRole>();
-        request.getRoles().forEach(role -> roles.add(UserRole.builder()
-                .id(UserRoleKey.builder()
-                        .userId(userId)
-                        .role(role)
-                        .build())
-                .build()));
+        if (request.getRoles() == null || request.getRoles().isEmpty()) {
+            roles.add(UserRole.builder()
+                    .id(UserRoleKey.builder()
+                            .userId(userId)
+                            .role(Role.USER.getRole())
+                            .build())
+                    .build());
+        } else {
+            request.getRoles().forEach(role -> {
+                try {
+                    var roleEnum = Role.fromRole(role);
+                    roles.add(UserRole.builder()
+                            .id(UserRoleKey.builder()
+                                    .userId(userId)
+                                    .role(roleEnum.getRole())
+                                    .build())
+                            .build());
+                } catch (Exception e) {
+                    // Ignore
+                    log.warn("Unknown role: {}", role);
+                }
+            });
+        }
 
         // Init user
         var user = User.builder()

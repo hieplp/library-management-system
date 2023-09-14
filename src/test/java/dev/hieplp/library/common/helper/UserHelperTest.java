@@ -74,6 +74,27 @@ public class UserHelperTest {
     }
 
     @Nested
+    class GetUserTest {
+        @Test
+        void shouldThrowNotFoundException_WhenUserIsNotFound() {
+            final var userId = "userId";
+            doReturn(Optional.empty()).when(userRepo).findById(userId);
+            assertThrows(NotFoundException.class, () -> userHelper.getUser(userId));
+        }
+
+        @Test
+        void shouldSuccess_WhenUserIsFound() {
+            var user = new User()
+                    .setUserId("userId")
+                    .setStatus(UserStatus.ACTIVE.getStatus());
+
+            doReturn(Optional.of(user)).when(userRepo).findById(user.getUserId());
+
+            assertEquals(user, userHelper.getUser(user.getUserId()));
+        }
+    }
+
+    @Nested
     class GetActiveUserTest {
 
         @Test
