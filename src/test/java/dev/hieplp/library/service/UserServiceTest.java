@@ -177,7 +177,7 @@ public class UserServiceTest {
 
             doReturn(user).when(userHelper).getUser(user.getUserId());
 
-            assertEquals(expected, userService.getUser(user.getUserId()));
+            assertEquals(expected, userService.getUserByAdmin(user.getUserId()));
         }
     }
 
@@ -204,7 +204,7 @@ public class UserServiceTest {
         void shouldThrowDuplicatedUsernameException_WhenUsernameIsDuplicated() {
             doThrow(DuplicatedUsernameException.class).when(userHelper).validateUsername(request.getUsername());
 
-            assertThrows(DuplicatedUsernameException.class, () -> userService.createUser(request));
+            assertThrows(DuplicatedUsernameException.class, () -> userService.createUserByAdmin(request));
         }
 
         @Test
@@ -212,7 +212,7 @@ public class UserServiceTest {
             doNothing().when(userHelper).validateUsername(request.getUsername());
             doThrow(DuplicatedEmailException.class).when(userHelper).validateEmail(request.getEmail());
 
-            assertThrows(DuplicatedEmailException.class, () -> userService.createUser(request));
+            assertThrows(DuplicatedEmailException.class, () -> userService.createUserByAdmin(request));
         }
 
         @Test
@@ -224,7 +224,7 @@ public class UserServiceTest {
             doReturn(new Timestamp(0)).when(dateTimeUtil).getCurrentTimestamp();
             doReturn(USER_ID).when(currentUser).getUserId();
 
-            assert userService.createUser(request) != null;
+            assert userService.createUserByAdmin(request) != null;
         }
 
         @Test
@@ -238,7 +238,7 @@ public class UserServiceTest {
             doReturn(new Timestamp(0)).when(dateTimeUtil).getCurrentTimestamp();
             doReturn("userId").when(currentUser).getUserId();
 
-            assert userService.createUser(request) != null;
+            assert userService.createUserByAdmin(request) != null;
         }
 
         @Test
@@ -252,7 +252,7 @@ public class UserServiceTest {
             doReturn(new Timestamp(0)).when(dateTimeUtil).getCurrentTimestamp();
             doReturn(USER_ID).when(currentUser).getUserId();
 
-            assert userService.createUser(request) != null;
+            assert userService.createUserByAdmin(request) != null;
         }
 
         @Test
@@ -266,7 +266,7 @@ public class UserServiceTest {
 
             doThrow(RuntimeException.class).when(passwordRepo).save(any());
 
-            assertThrows(RuntimeException.class, () -> userService.createUser(request));
+            assertThrows(RuntimeException.class, () -> userService.createUserByAdmin(request));
         }
 
         @Test
@@ -295,7 +295,7 @@ public class UserServiceTest {
             doReturn(currentTime).when(dateTimeUtil).getCurrentTimestamp();
             doReturn(USER_ID).when(currentUser).getUserId();
 
-            var actual = userService.createUser(request);
+            var actual = userService.createUserByAdmin(request);
             assertEquals(expected, actual);
         }
     }
@@ -322,7 +322,7 @@ public class UserServiceTest {
         void shouldThrowNotFoundException_WhenUserIsNotFound() {
             doThrow(NotFoundException.class).when(userHelper).getUser(USER_ID);
 
-            assertThrows(NotFoundException.class, () -> userService.updateUser(USER_ID, request));
+            assertThrows(NotFoundException.class, () -> userService.updateUserByAdmin(USER_ID, request));
         }
 
         @Test
@@ -331,7 +331,7 @@ public class UserServiceTest {
 
             doReturn(user).when(userHelper).getUser(USER_ID);
 
-            assert userService.updateUser(USER_ID, request) != null;
+            assert userService.updateUserByAdmin(USER_ID, request) != null;
         }
 
         @Test
@@ -341,7 +341,7 @@ public class UserServiceTest {
 
             doReturn(user).when(userHelper).getUser(USER_ID);
 
-            assert userService.updateUser(USER_ID, request) != null;
+            assert userService.updateUserByAdmin(USER_ID, request) != null;
         }
 
         @Test
@@ -352,7 +352,7 @@ public class UserServiceTest {
             doReturn(user).when(userHelper).getUser(USER_ID);
             doThrow(RuntimeException.class).when(userRepo).save(any());
 
-            assertThrows(RuntimeException.class, () -> userService.updateUser(USER_ID, request));
+            assertThrows(RuntimeException.class, () -> userService.updateUserByAdmin(USER_ID, request));
         }
 
         @Test
@@ -375,7 +375,7 @@ public class UserServiceTest {
             doReturn(user).when(userHelper).getUser(USER_ID);
             doReturn(currentTime).when(dateTimeUtil).getCurrentTimestamp();
 
-            var actual = userService.updateUser(USER_ID, request);
+            var actual = userService.updateUserByAdmin(USER_ID, request);
             assertEquals(expected, actual);
         }
     }

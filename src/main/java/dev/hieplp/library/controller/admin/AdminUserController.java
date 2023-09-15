@@ -23,21 +23,21 @@ public class AdminUserController {
     @PostMapping
     public ResponseEntity<CommonResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
         log.info("Create user by admin with request: {}", request);
-        var response = userService.createUser(request);
+        var response = userService.createUserByAdmin(request);
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
     }
 
     @GetMapping
     public ResponseEntity<CommonResponse> getUsers(GetListRequest request) {
         log.info("Get users by admin with request: {}", request);
-        var response = userService.getUsers(request);
+        var response = userService.getUsersByAdmin(request);
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
     }
 
     @GetMapping("/{userId}")
     public ResponseEntity<CommonResponse> getUser(@PathVariable String userId) {
         log.info("Get user by admin with userId: {}", userId);
-        var response = userService.getUser(userId);
+        var response = userService.getUserByAdmin(userId);
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
     }
 
@@ -46,7 +46,7 @@ public class AdminUserController {
     public ResponseEntity<CommonResponse> updateUser(@PathVariable String userId,
                                                      @Valid @RequestBody UpdateUserRequest request) {
         log.info("Update user by admin with request: {}", request);
-        var response = userService.updateUser(userId, request);
+        var response = userService.updateUserByAdmin(userId, request);
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
     }
 }

@@ -1,6 +1,7 @@
 package dev.hieplp.library.common.util;
 
 import dev.hieplp.library.common.payload.request.GetListRequest;
+import dev.hieplp.library.common.payload.response.GetListResponse;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -58,11 +59,7 @@ public class SqlUtil {
         return PageRequest.of(request.getPage() - 1, request.getSize());
     }
 
-    public Pageable buildOrder(GetListRequest request) {
-        // FIXME: This function does 2 things: build pageable and build order
-
-        var pageable = buildPageable(request);
-
+    public Pageable buildOrder(GetListRequest request, Pageable pageable) {
         if (request.getOrder() == null || request.getOrder().isEmpty()) {
             return pageable;
         }
@@ -75,8 +72,13 @@ public class SqlUtil {
         return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), sort);
     }
 
+    public Pageable buildPaginationAndOrder(GetListRequest request) {
+        var pageable = buildPageable(request);
+        return buildOrder(request, pageable);
+    }
+
     public <T, Y> Page<Y> getPages(GetListRequest request, JpaSpecificationExecutor<T> repo, Class<Y> clazz) {
-        return repo.findAll(buildCondition(request), buildOrder(request)).map(object -> {
+        return repo.findAll(buildCondition(request), buildPaginationAndOrder(request)).map(object -> {
             try {
                 log.warn("Object: {}", object);
                 var response = clazz.getConstructor().newInstance();
@@ -87,5 +89,13 @@ public class SqlUtil {
                 return null;
             }
         });
+    }
+
+    public <T, Y> GetListResponse<Y> getList(GetListRequest request, JpaSpecificationExecutor<T> repo, Class<Y> clazz) {
+        var pages = getPages(request, repo, clazz);
+        return GetListResponse.<Y>builder()
+                .list(pages.getContent())
+                .total(pages.getTotalElements())
+                .build();
     }
 }

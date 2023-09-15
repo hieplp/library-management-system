@@ -85,7 +85,7 @@ public class UserServiceImpl implements UserService {
 
 
     @Override
-    public AdminUserResponse getUser(String userId) {
+    public AdminUserResponse getUserByAdmin(String userId) {
         log.info("Get user by admin with userId: {}", userId);
         var user = userHelper.getUser(userId);
         var response = new AdminUserResponse();
@@ -94,7 +94,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public GetListResponse<AdminUserResponse> getUsers(GetListRequest request) {
+    public GetListResponse<AdminUserResponse> getUsersByAdmin(GetListRequest request) {
         log.info("Get users by admin with request: {}", request);
         var pages = sqlUtil.getPages(request, userRepo, AdminUserResponse.class);
         return GetListResponse.<AdminUserResponse>builder()
@@ -105,7 +105,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public AdminUserResponse createUser(CreateUserRequest request) {
+    public AdminUserResponse createUserByAdmin(CreateUserRequest request) {
         log.info("Create user by admin with request: {}", request);
 
         // Check duplicated username and email
@@ -172,7 +172,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public AdminUserResponse updateUser(String userId, UpdateUserRequest request) {
+    public AdminUserResponse updateUserByAdmin(String userId, UpdateUserRequest request) {
         log.info("Update user: {} by admin with request: {}", userId, request);
 
         var user = userHelper.getUser(userId);

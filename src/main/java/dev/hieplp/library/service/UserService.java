@@ -13,11 +13,11 @@ public interface UserService {
 
     CommonUserResponse updateOwnProfile(UpdateOwnProfileRequest request);
 
-    AdminUserResponse getUser(String userId);
+    AdminUserResponse getUserByAdmin(String userId);
 
-    GetListResponse<AdminUserResponse> getUsers(GetListRequest request);
+    GetListResponse<AdminUserResponse> getUsersByAdmin(GetListRequest request);
 
-    AdminUserResponse createUser(CreateUserRequest request);
+    AdminUserResponse createUserByAdmin(CreateUserRequest request);
 
-    AdminUserResponse updateUser(String userId, UpdateUserRequest request);
+    AdminUserResponse updateUserByAdmin(String userId, UpdateUserRequest request);
 }
