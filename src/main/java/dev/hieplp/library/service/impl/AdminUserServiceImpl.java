@@ -8,8 +8,11 @@ import dev.hieplp.library.common.enums.IdLength;
 import dev.hieplp.library.common.enums.user.Role;
 import dev.hieplp.library.common.enums.user.UserStatus;
 import dev.hieplp.library.common.helper.UserHelper;
+import dev.hieplp.library.common.payload.request.GetListRequest;
+import dev.hieplp.library.common.payload.response.GetListResponse;
 import dev.hieplp.library.common.util.DateTimeUtil;
 import dev.hieplp.library.common.util.GeneratorUtil;
+import dev.hieplp.library.common.util.SqlUtil;
 import dev.hieplp.library.config.security.CurrentUser;
 import dev.hieplp.library.payload.request.user.CreateUserRequest;
 import dev.hieplp.library.payload.request.user.UpdateUserRequest;
@@ -39,6 +42,7 @@ public class AdminUserServiceImpl implements AdminUserService {
 
     private final DateTimeUtil dateTimeUtil;
     private final GeneratorUtil generatorUtil;
+    private final SqlUtil sqlUtil;
 
     @Override
     public AdminUserResponse getUser(String userId) {
@@ -47,6 +51,16 @@ public class AdminUserServiceImpl implements AdminUserService {
         var response = new AdminUserResponse();
         BeanUtils.copyProperties(user, response);
         return response;
+    }
+
+    @Override
+    public GetListResponse<AdminUserResponse> getUsers(GetListRequest request) {
+        log.info("Get users by admin with request: {}", request);
+        var pages = sqlUtil.getPages(request, userRepo, AdminUserResponse.class);
+        return GetListResponse.<AdminUserResponse>builder()
+                .list(pages.getContent())
+                .total(pages.getTotalElements())
+                .build();
     }
 
     @Override

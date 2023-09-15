@@ -1,6 +1,7 @@
 package dev.hieplp.library.controller.admin;
 
 import dev.hieplp.library.common.enums.response.SuccessCode;
+import dev.hieplp.library.common.payload.request.GetListRequest;
 import dev.hieplp.library.common.payload.response.CommonResponse;
 import dev.hieplp.library.payload.request.user.CreateUserRequest;
 import dev.hieplp.library.payload.request.user.UpdateUserRequest;
@@ -26,12 +27,20 @@ public class AdminUserController {
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
     }
 
+    @GetMapping
+    public ResponseEntity<CommonResponse> getUsers(GetListRequest request) {
+        log.info("Get users by admin with request: {}", request);
+        var response = userService.getUsers(request);
+        return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
+    }
+
     @GetMapping("/{userId}")
     public ResponseEntity<CommonResponse> getUser(@PathVariable String userId) {
         log.info("Get user by admin with userId: {}", userId);
         var response = userService.getUser(userId);
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
     }
+
 
     @PatchMapping("/{userId}")
     public ResponseEntity<CommonResponse> updateUser(@PathVariable String userId,
