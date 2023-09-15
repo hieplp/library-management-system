@@ -8,7 +8,6 @@ import dev.hieplp.library.controller.admin.AdminUserController;
 import dev.hieplp.library.payload.request.user.CreateUserRequest;
 import dev.hieplp.library.payload.request.user.UpdateUserRequest;
 import dev.hieplp.library.payload.response.user.AdminUserResponse;
-import dev.hieplp.library.service.AdminUserService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

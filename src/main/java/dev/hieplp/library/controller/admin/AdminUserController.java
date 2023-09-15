@@ -5,7 +5,7 @@ import dev.hieplp.library.common.payload.request.GetListRequest;
 import dev.hieplp.library.common.payload.response.CommonResponse;
 import dev.hieplp.library.payload.request.user.CreateUserRequest;
 import dev.hieplp.library.payload.request.user.UpdateUserRequest;
-import dev.hieplp.library.service.AdminUserService;
+import dev.hieplp.library.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/admin/users")
 public class AdminUserController {
 
-    private final AdminUserService userService;
+    private final UserService userService;
 
     @PostMapping
     public ResponseEntity<CommonResponse> createUser(@Valid @RequestBody CreateUserRequest request) {
