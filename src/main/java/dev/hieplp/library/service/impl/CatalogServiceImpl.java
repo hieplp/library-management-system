@@ -13,6 +13,7 @@ import dev.hieplp.library.config.security.CurrentUser;
 import dev.hieplp.library.payload.request.catalog.CreateCatalogRequest;
 import dev.hieplp.library.payload.request.catalog.UpdateCatalogRequest;
 import dev.hieplp.library.payload.response.catalog.AdminCatalogResponse;
+import dev.hieplp.library.payload.response.catalog.CommonCatalogResponse;
 import dev.hieplp.library.repository.CatalogRepository;
 import dev.hieplp.library.service.CatalogService;
 import lombok.RequiredArgsConstructor;
@@ -118,5 +119,21 @@ public class CatalogServiceImpl implements CatalogService {
     public GetListResponse<AdminCatalogResponse> getCatalogsByAdmin(GetListRequest request) {
         log.info("Get catalogs with request: {}", request);
         return sqlUtil.getList(request, catalogRepo, AdminCatalogResponse.class);
+    }
+
+    @Override
+    public GetListResponse<CommonCatalogResponse> getActiveCatalogs(GetListRequest request) {
+        log.info("Get catalogs with request: {}", request);
+        request.setStatuses(new Byte[]{CatalogStatus.ACTIVE.getStatus()});
+        return sqlUtil.getList(request, catalogRepo, CommonCatalogResponse.class);
+    }
+
+    @Override
+    public CommonCatalogResponse getActiveCatalog(String catalogId) {
+        log.info("Get catalog with catalogId: {}", catalogId);
+        var catalog = catalogHelper.getActiveCatalog(catalogId);
+        var response = new CommonCatalogResponse();
+        BeanUtils.copyProperties(catalog, response);
+        return response;
     }
 }

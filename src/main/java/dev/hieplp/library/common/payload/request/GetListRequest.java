@@ -15,4 +15,6 @@ public class GetListRequest {
 
     private String order;
     private String orderBy;
+
+    private Byte[] statuses;
 }

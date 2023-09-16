@@ -31,7 +31,7 @@ public class CatalogHelperImpl implements CatalogHelper {
     public Catalog getActiveCatalog(String catalogId) {
         log.info("Get active catalog with catalogId: {}", catalogId);
         var catalog = getCatalog(catalogId);
-        if (CatalogStatus.ACTIVE.getStatus().equals(catalog.getStatus())) {
+        if (!CatalogStatus.ACTIVE.getStatus().equals(catalog.getStatus())) {
             var message = String.format("Catalog with catalogId: %s is inactive", catalogId);
             log.warn(message);
             throw new NotFoundException(message);

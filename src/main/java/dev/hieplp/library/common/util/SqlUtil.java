@@ -42,6 +42,11 @@ public class SqlUtil {
                     predicates.add(predicate);
                 }
 
+                if (request.getStatuses() != null) {
+                    var predicate = root.get("status").in((Object[]) request.getStatuses());
+                    predicates.add(predicate);
+                }
+
                 return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
             }
         };
