@@ -4,6 +4,7 @@ public enum ErrorCode implements ResponseCode {
     BAD_REQUEST("4000", "Bad request"),
     UNAUTHORIZED("4001", "Unauthorized"),
     NOT_FOUND("4004", "Not found"),
+    DUPLICATED("4005", "Duplicated"),
     INTERNAL_SERVER_ERROR("5000", "Internal server error"),
 
     // OTP
