@@ -7,6 +7,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.sql.Timestamp;
+
 @Data
 @Entity
 @Builder
@@ -22,7 +24,18 @@ public class Ward {
 
     private String description;
 
-    @ManyToOne(cascade = CascadeType.ALL)
+    @Column(length = 1)
+    private Byte status;
+
+    private String createdBy;
+
+    private Timestamp createdAt;
+
+    private String modifiedBy;
+
+    private Timestamp modifiedAt;
+
+    @ManyToOne
     @JoinColumn(name = "district_id")
     private District district;
 }

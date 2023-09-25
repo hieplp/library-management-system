@@ -5,6 +5,8 @@ import dev.hieplp.library.common.payload.request.GetListRequest;
 import dev.hieplp.library.common.payload.response.CommonResponse;
 import dev.hieplp.library.payload.request.location.city.CreateCityRequest;
 import dev.hieplp.library.payload.request.location.country.CreateCountryRequest;
+import dev.hieplp.library.payload.request.location.district.CreateDistrictRequest;
+import dev.hieplp.library.payload.request.location.ward.CreateWardRequest;
 import dev.hieplp.library.service.LocationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -64,6 +66,48 @@ public class AdminLocationController {
     public ResponseEntity<CommonResponse> getCityByAdmin(@PathVariable String cityId) {
         log.info("Get city with id: {}", cityId);
         var response = locationService.getCityByAdmin(cityId);
+        return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
+    }
+
+    @PostMapping(DISTRICT_PATH)
+    public ResponseEntity<CommonResponse> createDistrictByAdmin(@Valid @RequestBody CreateDistrictRequest request) {
+        log.info("Create district with request: {}", request);
+        var response = locationService.createDistrictByAdmin(request);
+        return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
+    }
+
+    @GetMapping(DISTRICT_PATH)
+    public ResponseEntity<CommonResponse> getDistrictsByAdmin(GetListRequest request) {
+        log.info("Get districts with request: {}", request);
+        var response = locationService.getDistrictsByAdmin(request);
+        return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
+    }
+
+    @GetMapping(DISTRICT_PATH + "/{districtId}")
+    public ResponseEntity<CommonResponse> getDistrictByAdmin(@PathVariable String districtId) {
+        log.info("Get district with id: {}", districtId);
+        var response = locationService.getDistrictByAdmin(districtId);
+        return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
+    }
+
+    @PostMapping(WARD_PATH)
+    public ResponseEntity<CommonResponse> createWardByAdmin(@Valid @RequestBody CreateWardRequest request) {
+        log.info("Create ward with request: {}", request);
+        var response = locationService.createWardByAdmin(request);
+        return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
+    }
+
+    @GetMapping(WARD_PATH)
+    public ResponseEntity<CommonResponse> getWardsByAdmin(GetListRequest request) {
+        log.info("Get wards with request: {}", request);
+        var response = locationService.getWardsByAdmin(request);
+        return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
+    }
+
+    @GetMapping(WARD_PATH + "/{wardId}")
+    public ResponseEntity<CommonResponse> getWardByAdmin(@PathVariable String wardId) {
+        log.info("Get ward with id: {}", wardId);
+        var response = locationService.getWardByAdmin(wardId);
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
     }
 }

@@ -2,8 +2,12 @@ package dev.hieplp.library.service.impl;
 
 import dev.hieplp.library.common.entity.City;
 import dev.hieplp.library.common.entity.Country;
+import dev.hieplp.library.common.entity.District;
+import dev.hieplp.library.common.entity.Ward;
 import dev.hieplp.library.common.enums.location.CityStatus;
 import dev.hieplp.library.common.enums.location.CountryStatus;
+import dev.hieplp.library.common.enums.location.DistrictStatus;
+import dev.hieplp.library.common.enums.location.WardStatus;
 import dev.hieplp.library.common.exception.DuplicatedException;
 import dev.hieplp.library.common.helper.LocationHelper;
 import dev.hieplp.library.common.payload.request.GetListRequest;
@@ -13,10 +17,16 @@ import dev.hieplp.library.common.util.SqlUtil;
 import dev.hieplp.library.config.security.CurrentUser;
 import dev.hieplp.library.payload.request.location.city.CreateCityRequest;
 import dev.hieplp.library.payload.request.location.country.CreateCountryRequest;
+import dev.hieplp.library.payload.request.location.district.CreateDistrictRequest;
+import dev.hieplp.library.payload.request.location.ward.CreateWardRequest;
 import dev.hieplp.library.payload.response.location.city.AdminCityResponse;
 import dev.hieplp.library.payload.response.location.country.AdminCountryResponse;
+import dev.hieplp.library.payload.response.location.district.AdminDistrictResponse;
+import dev.hieplp.library.payload.response.location.ward.AdminWardResponse;
 import dev.hieplp.library.repository.CityRepository;
 import dev.hieplp.library.repository.CountryRepository;
+import dev.hieplp.library.repository.DistrictRepository;
+import dev.hieplp.library.repository.WardRepository;
 import dev.hieplp.library.service.LocationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +42,8 @@ public class LocationServiceImpl implements LocationService {
 
     private final CountryRepository countryRepo;
     private final CityRepository cityRepo;
+    private final DistrictRepository districtRepo;
+    private final WardRepository wardRepo;
 
     private final SqlUtil sqlUtil;
     private final DateTimeUtil dateTimeUtil;
@@ -117,5 +129,89 @@ public class LocationServiceImpl implements LocationService {
     public GetListResponse<AdminCityResponse> getCitiesByAdmin(GetListRequest request) {
         log.info("Get cities with request: {}", request);
         return sqlUtil.getList(request, cityRepo, AdminCityResponse.class);
+    }
+
+    @Override
+    public AdminDistrictResponse createDistrictByAdmin(CreateDistrictRequest request) {
+        log.info("Create district with request: {}", request);
+
+        if (districtRepo.existsByDistrictId(request.getDistrictId())) {
+            var message = String.format("District with id: %s already exists", request.getDistrictId());
+            log.warn(message);
+            throw new DuplicatedException(message);
+        }
+
+        var city = locationHelper.getCity(request.getCityId(), City.class);
+
+        var district = District.builder()
+                .districtId(request.getDistrictId())
+                .districtName(request.getDistrictName())
+                .description(request.getDescription())
+                .status(DistrictStatus.ACTIVE.getStatus())
+                .city(city)
+                .createdBy(currentUser.getUserId())
+                .createdAt(dateTimeUtil.getCurrentTimestamp())
+                .modifiedBy(currentUser.getUserId())
+                .modifiedAt(dateTimeUtil.getCurrentTimestamp())
+                .build();
+        districtRepo.save(district);
+
+        var response = new AdminDistrictResponse();
+        BeanUtils.copyProperties(district, response);
+        return response;
+    }
+
+    @Override
+    public AdminDistrictResponse getDistrictByAdmin(String districtId) {
+        log.info("Get district with id: {}", districtId);
+        return locationHelper.getDistrict(districtId, AdminDistrictResponse.class);
+    }
+
+    @Override
+    public GetListResponse<AdminDistrictResponse> getDistrictsByAdmin(GetListRequest request) {
+        log.info("Get districts with request: {}", request);
+        return sqlUtil.getList(request, districtRepo, AdminDistrictResponse.class);
+    }
+
+    @Override
+    public AdminWardResponse createWardByAdmin(CreateWardRequest request) {
+        log.info("Create ward with request: {}", request);
+
+        if (wardRepo.existsByWardId(request.getWardId())) {
+            var message = String.format("Ward with id: %s already exists", request.getWardId());
+            log.warn(message);
+            throw new DuplicatedException(message);
+        }
+
+        var district = locationHelper.getDistrict(request.getDistrictId(), District.class);
+
+        var ward = Ward.builder()
+                .wardId(request.getWardId())
+                .wardName(request.getWardName())
+                .description(request.getDescription())
+                .status(WardStatus.ACTIVE.getStatus())
+                .district(district)
+                .createdBy(currentUser.getUserId())
+                .createdAt(dateTimeUtil.getCurrentTimestamp())
+                .modifiedBy(currentUser.getUserId())
+                .modifiedAt(dateTimeUtil.getCurrentTimestamp())
+                .build();
+        wardRepo.save(ward);
+
+        var response = new AdminWardResponse();
+        BeanUtils.copyProperties(ward, response);
+        return response;
+    }
+
+    @Override
+    public AdminWardResponse getWardByAdmin(String wardId) {
+        log.info("Get ward with id: {}", wardId);
+        return locationHelper.getWard(wardId, AdminWardResponse.class);
+    }
+
+    @Override
+    public GetListResponse<AdminWardResponse> getWardsByAdmin(GetListRequest request) {
+        log.info("Get wards with request: {}", request);
+        return sqlUtil.getList(request, wardRepo, AdminWardResponse.class);
     }
 }
