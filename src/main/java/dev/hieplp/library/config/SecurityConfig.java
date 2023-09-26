@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/auth/refresh-access-token")).authenticated()
                         .requestMatchers(new AntPathRequestMatcher("/auth/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/catalogs/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/locations/**")).permitAll()
 
                         // Admin
                         .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAnyAuthority(Role.ADMIN.getRoleAsString(), Role.ROOT.getRoleAsString())

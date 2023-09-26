@@ -13,6 +13,7 @@ import dev.hieplp.library.common.helper.LocationHelper;
 import dev.hieplp.library.common.payload.request.GetListRequest;
 import dev.hieplp.library.common.payload.response.GetListResponse;
 import dev.hieplp.library.common.util.DateTimeUtil;
+import dev.hieplp.library.common.util.ObjectUtil;
 import dev.hieplp.library.common.util.SqlUtil;
 import dev.hieplp.library.config.security.CurrentUser;
 import dev.hieplp.library.payload.request.location.city.CreateCityRequest;
@@ -20,9 +21,13 @@ import dev.hieplp.library.payload.request.location.country.CreateCountryRequest;
 import dev.hieplp.library.payload.request.location.district.CreateDistrictRequest;
 import dev.hieplp.library.payload.request.location.ward.CreateWardRequest;
 import dev.hieplp.library.payload.response.location.city.AdminCityResponse;
+import dev.hieplp.library.payload.response.location.city.UserCityResponse;
 import dev.hieplp.library.payload.response.location.country.AdminCountryResponse;
+import dev.hieplp.library.payload.response.location.country.UserCountryResponse;
 import dev.hieplp.library.payload.response.location.district.AdminDistrictResponse;
+import dev.hieplp.library.payload.response.location.district.UserDistrictResponse;
 import dev.hieplp.library.payload.response.location.ward.AdminWardResponse;
+import dev.hieplp.library.payload.response.location.ward.UserWardResponse;
 import dev.hieplp.library.repository.CityRepository;
 import dev.hieplp.library.repository.CountryRepository;
 import dev.hieplp.library.repository.DistrictRepository;
@@ -32,6 +37,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -47,6 +54,7 @@ public class LocationServiceImpl implements LocationService {
 
     private final SqlUtil sqlUtil;
     private final DateTimeUtil dateTimeUtil;
+    private final ObjectUtil objectUtil;
 
     private final LocationHelper locationHelper;
 
@@ -116,6 +124,7 @@ public class LocationServiceImpl implements LocationService {
 
         var response = new AdminCityResponse();
         BeanUtils.copyProperties(city, response);
+        response.setCountryId(country.getCountryId());
         return response;
     }
 
@@ -158,6 +167,7 @@ public class LocationServiceImpl implements LocationService {
 
         var response = new AdminDistrictResponse();
         BeanUtils.copyProperties(district, response);
+        response.setCityId(city.getCityId());
         return response;
     }
 
@@ -200,6 +210,7 @@ public class LocationServiceImpl implements LocationService {
 
         var response = new AdminWardResponse();
         BeanUtils.copyProperties(ward, response);
+        response.setDistrictId(district.getDistrictId());
         return response;
     }
 
@@ -213,5 +224,57 @@ public class LocationServiceImpl implements LocationService {
     public GetListResponse<AdminWardResponse> getWardsByAdmin(GetListRequest request) {
         log.info("Get wards with request: {}", request);
         return sqlUtil.getList(request, wardRepo, AdminWardResponse.class);
+    }
+
+    @Override
+    public List<UserCountryResponse> getAllCountriesByUser() {
+        log.info("Get all countries by user");
+        var countries = countryRepo.findAllByStatus(CountryStatus.ACTIVE.getStatus());
+        return objectUtil.copyProperties(countries, UserCountryResponse.class);
+    }
+
+    @Override
+    public List<UserCityResponse> getAllCitiesByUser() {
+        log.info("Get all cities by user");
+        var cities = cityRepo.findAllByStatus(CityStatus.ACTIVE.getStatus());
+        return objectUtil.copyProperties(cities, UserCityResponse.class);
+    }
+
+    @Override
+    public List<UserCityResponse> getCitiesByUser(String countryId) {
+        log.info("Get cities by user with countryId: {}", countryId);
+        var country = locationHelper.getCountry(countryId);
+        var cities = cityRepo.findAllByStatusAndCountry(CityStatus.ACTIVE.getStatus(), country);
+        return objectUtil.copyProperties(cities, UserCityResponse.class);
+    }
+
+    @Override
+    public List<UserDistrictResponse> getAllDistrictsByUser() {
+        log.info("Get all districts by user");
+        var districts = districtRepo.findAllByStatus(DistrictStatus.ACTIVE.getStatus());
+        return objectUtil.copyProperties(districts, UserDistrictResponse.class);
+    }
+
+    @Override
+    public List<UserDistrictResponse> getDistrictsByUser(String cityId) {
+        log.info("Get districts by user with cityId: {}", cityId);
+        var city = locationHelper.getCity(cityId);
+        var districts = districtRepo.findAllByStatusAndCity(DistrictStatus.ACTIVE.getStatus(), city);
+        return objectUtil.copyProperties(districts, UserDistrictResponse.class);
+    }
+
+    @Override
+    public List<UserWardResponse> getAllWardsByUser() {
+        log.info("Get all wards by user");
+        var wards = wardRepo.findAllByStatus(WardStatus.ACTIVE.getStatus());
+        return objectUtil.copyProperties(wards, UserWardResponse.class);
+    }
+
+    @Override
+    public List<UserWardResponse> getWardsByUser(String districtId) {
+        log.info("Get wards by user with districtId: {}", districtId);
+        var district = locationHelper.getDistrict(districtId);
+        var wards = wardRepo.findAllByStatusAndDistrict(WardStatus.ACTIVE.getStatus(), district);
+        return objectUtil.copyProperties(wards, UserWardResponse.class);
     }
 }
