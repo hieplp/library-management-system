@@ -2,10 +2,13 @@ package dev.hieplp.library.service;
 
 import dev.hieplp.library.common.payload.request.GetListRequest;
 import dev.hieplp.library.common.payload.response.GetListResponse;
+import dev.hieplp.library.payload.request.location.address.CreateAddressRequest;
+import dev.hieplp.library.payload.request.location.address.UpdateAddressRequest;
 import dev.hieplp.library.payload.request.location.city.CreateCityRequest;
 import dev.hieplp.library.payload.request.location.country.CreateCountryRequest;
 import dev.hieplp.library.payload.request.location.district.CreateDistrictRequest;
 import dev.hieplp.library.payload.request.location.ward.CreateWardRequest;
+import dev.hieplp.library.payload.response.location.address.UserAddressResponse;
 import dev.hieplp.library.payload.response.location.city.AdminCityResponse;
 import dev.hieplp.library.payload.response.location.city.UserCityResponse;
 import dev.hieplp.library.payload.response.location.country.AdminCountryResponse;
@@ -63,4 +66,15 @@ public interface LocationService {
     List<UserWardResponse> getAllWardsByUser();
 
     List<UserWardResponse> getWardsByUser(String districtId);
+
+    // ------------------- USER : ADDRESS -------------------
+    UserAddressResponse createAddressByUser(CreateAddressRequest request);
+
+    UserAddressResponse updateAddressByUser(String addressId, UpdateAddressRequest request);
+
+    void deleteAddressByUser(String addressId);
+
+    UserAddressResponse getAddressByUser(String addressId);
+
+    GetListResponse<UserAddressResponse> getAddressesByUser(GetListRequest request);
 }

@@ -1,25 +1,24 @@
 package dev.hieplp.library.service.impl;
 
-import dev.hieplp.library.common.entity.City;
-import dev.hieplp.library.common.entity.Country;
-import dev.hieplp.library.common.entity.District;
-import dev.hieplp.library.common.entity.Ward;
-import dev.hieplp.library.common.enums.location.CityStatus;
-import dev.hieplp.library.common.enums.location.CountryStatus;
-import dev.hieplp.library.common.enums.location.DistrictStatus;
-import dev.hieplp.library.common.enums.location.WardStatus;
+import dev.hieplp.library.common.entity.*;
+import dev.hieplp.library.common.enums.IdLength;
+import dev.hieplp.library.common.enums.location.*;
 import dev.hieplp.library.common.exception.DuplicatedException;
 import dev.hieplp.library.common.helper.LocationHelper;
 import dev.hieplp.library.common.payload.request.GetListRequest;
 import dev.hieplp.library.common.payload.response.GetListResponse;
 import dev.hieplp.library.common.util.DateTimeUtil;
+import dev.hieplp.library.common.util.GeneratorUtil;
 import dev.hieplp.library.common.util.ObjectUtil;
 import dev.hieplp.library.common.util.SqlUtil;
 import dev.hieplp.library.config.security.CurrentUser;
+import dev.hieplp.library.payload.request.location.address.CreateAddressRequest;
+import dev.hieplp.library.payload.request.location.address.UpdateAddressRequest;
 import dev.hieplp.library.payload.request.location.city.CreateCityRequest;
 import dev.hieplp.library.payload.request.location.country.CreateCountryRequest;
 import dev.hieplp.library.payload.request.location.district.CreateDistrictRequest;
 import dev.hieplp.library.payload.request.location.ward.CreateWardRequest;
+import dev.hieplp.library.payload.response.location.address.UserAddressResponse;
 import dev.hieplp.library.payload.response.location.city.AdminCityResponse;
 import dev.hieplp.library.payload.response.location.city.UserCityResponse;
 import dev.hieplp.library.payload.response.location.country.AdminCountryResponse;
@@ -28,10 +27,7 @@ import dev.hieplp.library.payload.response.location.district.AdminDistrictRespon
 import dev.hieplp.library.payload.response.location.district.UserDistrictResponse;
 import dev.hieplp.library.payload.response.location.ward.AdminWardResponse;
 import dev.hieplp.library.payload.response.location.ward.UserWardResponse;
-import dev.hieplp.library.repository.CityRepository;
-import dev.hieplp.library.repository.CountryRepository;
-import dev.hieplp.library.repository.DistrictRepository;
-import dev.hieplp.library.repository.WardRepository;
+import dev.hieplp.library.repository.*;
 import dev.hieplp.library.service.LocationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,10 +47,12 @@ public class LocationServiceImpl implements LocationService {
     private final CityRepository cityRepo;
     private final DistrictRepository districtRepo;
     private final WardRepository wardRepo;
+    private final AddressRepository addressRepo;
 
     private final SqlUtil sqlUtil;
     private final DateTimeUtil dateTimeUtil;
     private final ObjectUtil objectUtil;
+    private final GeneratorUtil generatorUtil;
 
     private final LocationHelper locationHelper;
 
@@ -276,5 +274,152 @@ public class LocationServiceImpl implements LocationService {
         var district = locationHelper.getDistrict(districtId);
         var wards = wardRepo.findAllByStatusAndDistrict(WardStatus.ACTIVE.getStatus(), district);
         return objectUtil.copyProperties(wards, UserWardResponse.class);
+    }
+
+    @Override
+    public UserAddressResponse createAddressByUser(CreateAddressRequest request) {
+        log.info("Create address by user with request: {}", request);
+
+        var user = new User();
+        user.setUserId(currentUser.getUserId());
+
+        var country = locationHelper.getCountry(request.getCountryId());
+        var city = locationHelper.getCity(request.getCityId(), country.getCountryId());
+        var district = locationHelper.getDistrict(request.getDistrictId(), city.getCityId());
+        var ward = locationHelper.getWard(request.getWardId(), district.getDistrictId());
+
+        var isDefault = AddressDefault.NO;
+        if (!addressRepo.existsByUserAndIsDefaultTrue(user)) {
+            isDefault = AddressDefault.YES;
+        }
+
+        var type = AddressType.fromValue(request.getType());
+
+        var addressId = generatorUtil.generateId(IdLength.ADDRESS_ID);
+        var address = Address.builder()
+                .addressId(addressId)
+                .address(request.getAddress())
+                .description(request.getDescription())
+                .type(type.getType())
+                .isDefault(isDefault.getStatus())
+                .status(AddressStatus.ACTIVE.getStatus())
+                .user(user)
+
+                .ward(ward)
+                .district(district)
+                .city(city)
+                .country(country)
+
+                .createdBy(currentUser.getUserId())
+                .createdAt(dateTimeUtil.getCurrentTimestamp())
+                .modifiedBy(currentUser.getUserId())
+                .modifiedAt(dateTimeUtil.getCurrentTimestamp())
+
+                .build();
+        addressRepo.save(address);
+
+        var response = new UserAddressResponse();
+        BeanUtils.copyProperties(address, response);
+        response.setWardId(ward.getWardId());
+        response.setWardName(ward.getWardName());
+        response.setDistrictId(district.getDistrictId());
+        response.setDistrictName(district.getDistrictName());
+        response.setCityId(city.getCityId());
+        response.setCityName(city.getCityName());
+        response.setCountryId(country.getCountryId());
+        response.setCountryName(country.getCountryName());
+        return response;
+    }
+
+    @Override
+    public UserAddressResponse updateAddressByUser(String addressId, UpdateAddressRequest request) {
+        log.info("Update address by user with addressId: {} and request: {}", addressId, request);
+
+        var address = locationHelper.getAddress(addressId, currentUser.getUserId());
+
+        var isChanged = false;
+
+        if (request.getAddress() != null && !address.getAddress().equals(request.getAddress())) {
+            address.setAddress(request.getAddress());
+            isChanged = true;
+        }
+
+        if (request.getDescription() != null && !address.getDescription().equals(request.getDescription())) {
+            address.setDescription(request.getDescription());
+            isChanged = true;
+        }
+
+        if (request.getType() != null && !address.getType().equals(request.getType())) {
+            var type = AddressType.fromValue(request.getType());
+            address.setType(type.getType());
+            isChanged = true;
+        }
+
+        if (request.getIsDefault() != null && !address.getIsDefault().equals(request.getIsDefault())) {
+            if (AddressDefault.YES.getStatus().equals(request.getIsDefault())) {
+                // TODO: Update old default address into NO
+//                addressRepo.updateIsDefaultByUser(currentUser.getUserId(), AddressDefault.NO.getStatus());
+                address.setIsDefault(AddressDefault.YES.getStatus());
+                isChanged = true;
+            }
+        }
+
+        // Update country, city, district, ward
+        // TODO: Optimize this. If only one of them is changed, it will query all of them
+        if ((request.getCountryId() != null && !address.getCountry().getCountryId().equals(request.getCountryId()))
+                || (request.getCityId() != null && !address.getCity().getCityId().equals(request.getCityId()))
+                || (request.getDistrictId() != null && !address.getDistrict().getDistrictId().equals(request.getDistrictId()))
+                || (request.getWardId() != null && !address.getWard().getWardId().equals(request.getWardId()))) {
+            var country = locationHelper.getCountry(request.getCountryId());
+            address.setCountry(country);
+
+            var city = locationHelper.getCity(request.getCityId(), country.getCountryId());
+            address.setCity(city);
+
+            var district = locationHelper.getDistrict(request.getDistrictId(), city.getCityId());
+            address.setDistrict(district);
+
+            var ward = locationHelper.getWard(request.getWardId(), district.getDistrictId());
+            address.setWard(ward);
+
+            isChanged = true;
+        }
+
+        if (isChanged) {
+            address
+                    .setModifiedBy(currentUser.getUserId())
+                    .setModifiedAt(dateTimeUtil.getCurrentTimestamp());
+            addressRepo.save(address);
+        }
+
+        var response = new UserAddressResponse();
+        BeanUtils.copyProperties(address, response);
+        return response;
+    }
+
+    @Override
+    public void deleteAddressByUser(String addressId) {
+        log.info("Delete address by user with addressId: {}", addressId);
+        var address = locationHelper.getAddress(addressId, currentUser.getUserId());
+        address
+                .setStatus(AddressStatus.INACTIVE.getStatus())
+                .setModifiedBy(currentUser.getUserId())
+                .setModifiedAt(dateTimeUtil.getCurrentTimestamp());
+        addressRepo.save(address);
+    }
+
+    @Override
+    public UserAddressResponse getAddressByUser(String addressId) {
+        log.info("Get address by user with addressId: {}", addressId);
+        var address = locationHelper.getAddress(addressId, currentUser.getUserId());
+        var response = new UserAddressResponse();
+        BeanUtils.copyProperties(address, response);
+        return response;
+    }
+
+    @Override
+    public GetListResponse<UserAddressResponse> getAddressesByUser(GetListRequest request) {
+        log.info("Get addresses by user with request: {}", request);
+        return sqlUtil.getList(request, addressRepo, UserAddressResponse.class);
     }
 }

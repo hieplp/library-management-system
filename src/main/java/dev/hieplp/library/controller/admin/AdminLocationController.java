@@ -27,6 +27,7 @@ public class AdminLocationController {
 
     private final LocationService locationService;
 
+    // ------------------- COUNTRY -------------------
     @PostMapping(COUNTRY_PATH)
     public ResponseEntity<CommonResponse> createCountryByAdmin(@Valid @RequestBody CreateCountryRequest request) {
         log.info("Create country with request: {}", request);
@@ -48,6 +49,7 @@ public class AdminLocationController {
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
     }
 
+    // ------------------- CITY -------------------
     @PostMapping(CITY_PATH)
     public ResponseEntity<CommonResponse> createCityByAdmin(@Valid @RequestBody CreateCityRequest request) {
         log.info("Create city with request: {}", request);
@@ -69,6 +71,7 @@ public class AdminLocationController {
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
     }
 
+    // ------------------- DISTRICT -------------------
     @PostMapping(DISTRICT_PATH)
     public ResponseEntity<CommonResponse> createDistrictByAdmin(@Valid @RequestBody CreateDistrictRequest request) {
         log.info("Create district with request: {}", request);
@@ -90,6 +93,7 @@ public class AdminLocationController {
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, response));
     }
 
+    // ------------------- WARD -------------------
     @PostMapping(WARD_PATH)
     public ResponseEntity<CommonResponse> createWardByAdmin(@Valid @RequestBody CreateWardRequest request) {
         log.info("Create ward with request: {}", request);

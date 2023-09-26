@@ -8,6 +8,7 @@ import dev.hieplp.library.payload.response.catalog.AdminCatalogResponse;
 import dev.hieplp.library.payload.response.catalog.CommonCatalogResponse;
 
 public interface CatalogService {
+    // ------------------- ADMIN : CATALOG -------------------
     AdminCatalogResponse createCatalogByAdmin(CreateCatalogRequest request);
 
     AdminCatalogResponse updateCatalogByAdmin(String catalogId, UpdateCatalogRequest request);
@@ -18,5 +19,6 @@ public interface CatalogService {
 
     GetListResponse<CommonCatalogResponse> getActiveCatalogs(GetListRequest request);
 
+    // ------------------- USER : CATALOG -------------------
     CommonCatalogResponse getActiveCatalog(String catalogId);
 }

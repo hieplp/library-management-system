@@ -1,16 +1,10 @@
 package dev.hieplp.library.common.helper.impl;
 
-import dev.hieplp.library.common.entity.City;
-import dev.hieplp.library.common.entity.Country;
-import dev.hieplp.library.common.entity.District;
-import dev.hieplp.library.common.entity.Ward;
+import dev.hieplp.library.common.entity.*;
 import dev.hieplp.library.common.exception.NotFoundException;
 import dev.hieplp.library.common.exception.UnknownException;
 import dev.hieplp.library.common.helper.LocationHelper;
-import dev.hieplp.library.repository.CityRepository;
-import dev.hieplp.library.repository.CountryRepository;
-import dev.hieplp.library.repository.DistrictRepository;
-import dev.hieplp.library.repository.WardRepository;
+import dev.hieplp.library.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -27,6 +21,7 @@ public class LocationHelperImpl implements LocationHelper {
     private final CityRepository cityRepo;
     private final DistrictRepository districtRepo;
     private final WardRepository wardRepo;
+    private final AddressRepository addressRepo;
 
     @Override
     public Country getCountry(String countryId) {
@@ -58,6 +53,18 @@ public class LocationHelperImpl implements LocationHelper {
     }
 
     @Override
+    public City getCity(String cityId, String countryId) {
+        log.info("Get city with cityId: {} and countryId: {}", cityId, countryId);
+        var city = getCity(cityId);
+        if (!city.getCountry().getCountryId().equals(countryId)) {
+            var message = String.format("City with id: %s not found in country with id: %s", cityId, countryId);
+            log.warn(message);
+            throw new NotFoundException(message);
+        }
+        return city;
+    }
+
+    @Override
     public <T> T getCity(String cityId, Class<T> type) {
         log.info("Get city with id: {}", cityId);
         var city = getCity(cityId);
@@ -73,6 +80,18 @@ public class LocationHelperImpl implements LocationHelper {
                     log.warn(message);
                     return new NotFoundException(message);
                 });
+    }
+
+    @Override
+    public District getDistrict(String districtId, String cityId) {
+        log.info("Get district with districtId: {} and cityId: {}", districtId, cityId);
+        var district = getDistrict(districtId);
+        if (!district.getCity().getCityId().equals(cityId)) {
+            var message = String.format("District with id: %s not found in city with id: %s", districtId, cityId);
+            log.warn(message);
+            throw new NotFoundException(message);
+        }
+        return district;
     }
 
     @Override
@@ -94,10 +113,52 @@ public class LocationHelperImpl implements LocationHelper {
     }
 
     @Override
+    public Ward getWard(String wardId, String districtId) {
+        log.info("Get ward with wardId: {} and districtId: {}", wardId, districtId);
+        var ward = getWard(wardId);
+        if (!ward.getDistrict().getDistrictId().equals(districtId)) {
+            var message = String.format("Ward with id: %s not found in district with id: %s", wardId, districtId);
+            log.warn(message);
+            throw new NotFoundException(message);
+        }
+        return ward;
+    }
+
+    @Override
     public <T> T getWard(String wardId, Class<T> type) {
         log.info("Get ward with id: {}", wardId);
         var ward = getWard(wardId);
         return parse(ward, type);
+    }
+
+    @Override
+    public Address getAddress(String addressId) {
+        log.info("Get address with id: {}", addressId);
+        return addressRepo.findById(addressId)
+                .orElseThrow(() -> {
+                    var message = String.format("Address with id: %s not found", addressId);
+                    log.warn(message);
+                    return new NotFoundException(message);
+                });
+    }
+
+    @Override
+    public Address getAddress(String addressId, String userId) {
+        log.info("Get address with addressId: {} and userId: {}", addressId, userId);
+        var address = getAddress(addressId);
+        if (!address.getUser().getUserId().equals(userId)) {
+            var message = String.format("Address with id: %s not found in user with id: %s", addressId, userId);
+            log.warn(message);
+            throw new NotFoundException(message);
+        }
+        return address;
+    }
+
+    @Override
+    public <T> T getAddress(String addressId, Class<T> type) {
+        log.info("Get address with id: {}", addressId);
+        var address = getAddress(addressId);
+        return parse(address, type);
     }
 
     private <T> T parse(Object source, Class<T> type) {
