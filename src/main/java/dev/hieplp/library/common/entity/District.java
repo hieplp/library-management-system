@@ -42,4 +42,12 @@ public class District {
     @ManyToOne
     @JoinColumn(name = "city_id")
     private City city;
+
+    @Transient
+    private String cityId;
+
+    // ------------------- Getters -------------------
+    public String getCityId() {
+        return city == null ? null : city.getCityId();
+    }
 }

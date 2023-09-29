@@ -1,6 +1,7 @@
 package dev.hieplp.library.common.helper.impl;
 
 import dev.hieplp.library.common.entity.*;
+import dev.hieplp.library.common.enums.location.AddressStatus;
 import dev.hieplp.library.common.exception.NotFoundException;
 import dev.hieplp.library.common.exception.UnknownException;
 import dev.hieplp.library.common.helper.LocationHelper;
@@ -55,13 +56,15 @@ public class LocationHelperImpl implements LocationHelper {
     @Override
     public City getCity(String cityId, String countryId) {
         log.info("Get city with cityId: {} and countryId: {}", cityId, countryId);
+
         var city = getCity(cityId);
-        if (!city.getCountry().getCountryId().equals(countryId)) {
-            var message = String.format("City with id: %s not found in country with id: %s", cityId, countryId);
-            log.warn(message);
-            throw new NotFoundException(message);
+        if (city.getCountry().getCountryId().equals(countryId)) {
+            return city;
         }
-        return city;
+
+        var message = String.format("City with id: %s not found in country with id: %s", cityId, countryId);
+        log.warn(message);
+        throw new NotFoundException(message);
     }
 
     @Override
@@ -85,13 +88,15 @@ public class LocationHelperImpl implements LocationHelper {
     @Override
     public District getDistrict(String districtId, String cityId) {
         log.info("Get district with districtId: {} and cityId: {}", districtId, cityId);
+
         var district = getDistrict(districtId);
-        if (!district.getCity().getCityId().equals(cityId)) {
-            var message = String.format("District with id: %s not found in city with id: %s", districtId, cityId);
-            log.warn(message);
-            throw new NotFoundException(message);
+        if (district.getCity().getCityId().equals(cityId)) {
+            return district;
         }
-        return district;
+
+        var message = String.format("District with id: %s not found in city with id: %s", districtId, cityId);
+        log.warn(message);
+        throw new NotFoundException(message);
     }
 
     @Override
@@ -115,13 +120,15 @@ public class LocationHelperImpl implements LocationHelper {
     @Override
     public Ward getWard(String wardId, String districtId) {
         log.info("Get ward with wardId: {} and districtId: {}", wardId, districtId);
+
         var ward = getWard(wardId);
-        if (!ward.getDistrict().getDistrictId().equals(districtId)) {
-            var message = String.format("Ward with id: %s not found in district with id: %s", wardId, districtId);
-            log.warn(message);
-            throw new NotFoundException(message);
+        if (ward.getDistrict().getDistrictId().equals(districtId)) {
+            return ward;
         }
-        return ward;
+
+        var message = String.format("Ward with id: %s not found in district with id: %s", wardId, districtId);
+        log.warn(message);
+        throw new NotFoundException(message);
     }
 
     @Override
@@ -145,13 +152,29 @@ public class LocationHelperImpl implements LocationHelper {
     @Override
     public Address getAddress(String addressId, String userId) {
         log.info("Get address with addressId: {} and userId: {}", addressId, userId);
+
         var address = getAddress(addressId);
-        if (!address.getUser().getUserId().equals(userId)) {
-            var message = String.format("Address with id: %s not found in user with id: %s", addressId, userId);
-            log.warn(message);
-            throw new NotFoundException(message);
+        if (address.getUser().getUserId().equals(userId)) {
+            return address;
         }
-        return address;
+
+        var message = String.format("Address with id: %s not found in user with id: %s", addressId, userId);
+        log.warn(message);
+        throw new NotFoundException(message);
+    }
+
+    @Override
+    public Address getActiveAddress(String addressId, String userId) {
+        log.info("Get active address with addressId: {} and userId: {}", addressId, userId);
+
+        var address = getAddress(addressId, userId);
+        if (AddressStatus.ACTIVE.getStatus().equals(address.getStatus())) {
+            return address;
+        }
+
+        var message = String.format("Address with id: %s is not active", addressId);
+        log.warn(message);
+        throw new NotFoundException(message);
     }
 
     @Override

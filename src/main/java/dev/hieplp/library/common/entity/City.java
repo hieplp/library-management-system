@@ -42,4 +42,12 @@ public class City {
     @ManyToOne
     @JoinColumn(name = "country_id")
     private Country country;
+
+    @Transient
+    private String countryId;
+
+    // ------------------- Getters -------------------
+    public String getCountryId() {
+        return country == null ? null : country.getCountryId();
+    }
 }

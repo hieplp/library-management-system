@@ -37,6 +37,10 @@ public class Country {
 
     private Timestamp modifiedAt;
 
-    @OneToMany(mappedBy = "country", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(
+            mappedBy = "country",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private Set<City> cities;
 }

@@ -38,4 +38,12 @@ public class Ward {
     @ManyToOne
     @JoinColumn(name = "district_id")
     private District district;
+
+    @Transient
+    private String districtId;
+
+    // ------------------- Getters -------------------
+    public String getDistrictId() {
+        return district == null ? null : district.getDistrictId();
+    }
 }

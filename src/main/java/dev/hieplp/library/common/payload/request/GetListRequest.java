@@ -17,4 +17,6 @@ public class GetListRequest {
     private String orderBy;
 
     private Byte[] statuses;
+
+    private String userId;
 }

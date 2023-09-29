@@ -5,6 +5,7 @@ import dev.hieplp.library.common.enums.IdLength;
 import dev.hieplp.library.common.enums.location.*;
 import dev.hieplp.library.common.exception.DuplicatedException;
 import dev.hieplp.library.common.helper.LocationHelper;
+import dev.hieplp.library.common.helper.UserHelper;
 import dev.hieplp.library.common.payload.request.GetListRequest;
 import dev.hieplp.library.common.payload.response.GetListResponse;
 import dev.hieplp.library.common.util.DateTimeUtil;
@@ -33,11 +34,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class LocationServiceImpl implements LocationService {
 
@@ -55,6 +58,7 @@ public class LocationServiceImpl implements LocationService {
     private final GeneratorUtil generatorUtil;
 
     private final LocationHelper locationHelper;
+    private final UserHelper userHelper;
 
     @Override
     public AdminCountryResponse createCountryByAdmin(CreateCountryRequest request) {
@@ -280,8 +284,9 @@ public class LocationServiceImpl implements LocationService {
     public UserAddressResponse createAddressByUser(CreateAddressRequest request) {
         log.info("Create address by user with request: {}", request);
 
-        var user = new User();
-        user.setUserId(currentUser.getUserId());
+        var user = User.builder()
+                .userId(currentUser.getUserId())
+                .build();
 
         var country = locationHelper.getCountry(request.getCountryId());
         var city = locationHelper.getCity(request.getCityId(), country.getCountryId());
@@ -320,14 +325,6 @@ public class LocationServiceImpl implements LocationService {
 
         var response = new UserAddressResponse();
         BeanUtils.copyProperties(address, response);
-        response.setWardId(ward.getWardId());
-        response.setWardName(ward.getWardName());
-        response.setDistrictId(district.getDistrictId());
-        response.setDistrictName(district.getDistrictName());
-        response.setCityId(city.getCityId());
-        response.setCityName(city.getCityName());
-        response.setCountryId(country.getCountryId());
-        response.setCountryName(country.getCountryName());
         return response;
     }
 
@@ -335,7 +332,11 @@ public class LocationServiceImpl implements LocationService {
     public UserAddressResponse updateAddressByUser(String addressId, UpdateAddressRequest request) {
         log.info("Update address by user with addressId: {} and request: {}", addressId, request);
 
-        var address = locationHelper.getAddress(addressId, currentUser.getUserId());
+        var user = User.builder()
+                .userId(currentUser.getUserId())
+                .build();
+
+        var address = locationHelper.getActiveAddress(addressId, currentUser.getUserId());
 
         var isChanged = false;
 
@@ -357,8 +358,14 @@ public class LocationServiceImpl implements LocationService {
 
         if (request.getIsDefault() != null && !address.getIsDefault().equals(request.getIsDefault())) {
             if (AddressDefault.YES.getStatus().equals(request.getIsDefault())) {
-                // TODO: Update old default address into NO
-//                addressRepo.updateIsDefaultByUser(currentUser.getUserId(), AddressDefault.NO.getStatus());
+                // Update old default address into NO
+                var oldDefaultAddress = addressRepo.findByUserAndIsDefaultTrue(user);
+                oldDefaultAddress
+                        .setIsDefault(AddressDefault.NO.getStatus())
+                        .setModifiedBy(currentUser.getUserId())
+                        .setModifiedAt(dateTimeUtil.getCurrentTimestamp());
+
+                // Update new default address into YES
                 address.setIsDefault(AddressDefault.YES.getStatus());
                 isChanged = true;
             }
@@ -400,7 +407,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public void deleteAddressByUser(String addressId) {
         log.info("Delete address by user with addressId: {}", addressId);
-        var address = locationHelper.getAddress(addressId, currentUser.getUserId());
+        var address = locationHelper.getActiveAddress(addressId, currentUser.getUserId());
         address
                 .setStatus(AddressStatus.INACTIVE.getStatus())
                 .setModifiedBy(currentUser.getUserId())
@@ -411,7 +418,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public UserAddressResponse getAddressByUser(String addressId) {
         log.info("Get address by user with addressId: {}", addressId);
-        var address = locationHelper.getAddress(addressId, currentUser.getUserId());
+        var address = locationHelper.getActiveAddress(addressId, currentUser.getUserId());
         var response = new UserAddressResponse();
         BeanUtils.copyProperties(address, response);
         return response;
@@ -420,6 +427,8 @@ public class LocationServiceImpl implements LocationService {
     @Override
     public GetListResponse<UserAddressResponse> getAddressesByUser(GetListRequest request) {
         log.info("Get addresses by user with request: {}", request);
+        request.setUserId(currentUser.getUserId());
+        request.setStatuses(new Byte[]{AddressStatus.ACTIVE.getStatus()});
         return sqlUtil.getList(request, addressRepo, UserAddressResponse.class);
     }
 }

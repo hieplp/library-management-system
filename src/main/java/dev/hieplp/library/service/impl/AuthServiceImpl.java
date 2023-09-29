@@ -56,6 +56,7 @@ import java.util.HashSet;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
@@ -83,7 +84,6 @@ public class AuthServiceImpl implements AuthService {
     private final JavaMailSender javaMailSender;
 
     @Override
-    @Transactional
     public RequestToRegisterResponse requestToRegister(RequestToRegisterRequest request) {
         log.info("Request to register with request: {}", request);
 
@@ -126,7 +126,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
     public ResendRegisterOtpResponse resendRegisterOtp(ResendRegisterOtpRequest request) {
         log.info("Resend register otp with request: {}", request);
 
@@ -158,7 +157,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    @Transactional
     public ConfirmRegisterResponse confirmRegister(ConfirmRegisterRequest request) {
         log.info("Confirm register with request: {}", request);
 

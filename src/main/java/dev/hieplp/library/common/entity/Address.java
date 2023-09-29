@@ -60,4 +60,64 @@ public class Address {
     @ManyToOne
     @JoinColumn(name = "country_id")
     private Country country;
+
+    @Transient
+    private String userId;
+
+    @Transient
+    private String wardId;
+    @Transient
+    private String wardName;
+
+    @Transient
+    private String districtId;
+    @Transient
+    private String districtName;
+
+    @Transient
+    private String cityId;
+    @Transient
+    private String cityName;
+
+    @Transient
+    private String countryId;
+    @Transient
+    private String countryName;
+
+    // ------------------- Getters -------------------
+    public String getUserId() {
+        return user == null ? null : user.getUserId();
+    }
+
+    public String getWardId() {
+        return ward == null ? null : ward.getWardId();
+    }
+
+    public String getWardName() {
+        return ward == null ? null : ward.getWardName();
+    }
+
+    public String getDistrictId() {
+        return district == null ? null : district.getDistrictId();
+    }
+
+    public String getDistrictName() {
+        return district == null ? null : district.getDistrictName();
+    }
+
+    public String getCityId() {
+        return city == null ? null : city.getCityId();
+    }
+
+    public String getCityName() {
+        return city == null ? null : city.getCityName();
+    }
+
+    public String getCountryId() {
+        return country == null ? null : country.getCountryId();
+    }
+
+    public String getCountryName() {
+        return country == null ? null : country.getCountryName();
+    }
 }

@@ -10,4 +10,5 @@ import org.springframework.stereotype.Repository;
 public interface AddressRepository extends JpaRepository<Address, String>, JpaSpecificationExecutor<Address> {
     boolean existsByUserAndIsDefaultTrue(User user);
 
+    Address findByUserAndIsDefaultTrue(User user);
 }

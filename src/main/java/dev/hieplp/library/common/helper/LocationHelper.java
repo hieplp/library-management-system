@@ -34,5 +34,7 @@ public interface LocationHelper {
 
     Address getAddress(String addressId, String userId);
 
+    Address getActiveAddress(String addressId, String userId);
+
     <T> T getAddress(String addressId, Class<T> type);
 }

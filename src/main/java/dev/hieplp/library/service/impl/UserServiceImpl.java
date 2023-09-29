@@ -32,6 +32,7 @@ import java.util.HashSet;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 

@@ -38,7 +38,11 @@ public class SecurityConfig {
 
                 // Authorization
                 .authorizeHttpRequests(requests -> requests
+                        // Need authentication
                         .requestMatchers(new AntPathRequestMatcher("/auth/refresh-access-token")).authenticated()
+                        .requestMatchers(new AntPathRequestMatcher("/locations/addresses/**")).authenticated()
+
+                        // Public
                         .requestMatchers(new AntPathRequestMatcher("/auth/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/catalogs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/locations/**")).permitAll()

@@ -47,6 +47,11 @@ public class SqlUtil {
                     predicates.add(predicate);
                 }
 
+                if (request.getUserId() != null && !request.getUserId().isEmpty()) {
+                    var predicate = criteriaBuilder.equal(root.get("user").get("userId"), request.getUserId());
+                    predicates.add(predicate);
+                }
+
                 return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
             }
         };

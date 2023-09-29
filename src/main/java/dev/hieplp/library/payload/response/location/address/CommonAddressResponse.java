@@ -20,5 +20,5 @@ public class CommonAddressResponse {
     private String countryName;
 
     private Byte type;
-    private Byte isPrimary;
+    private Byte isDefault;
 }
