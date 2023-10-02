@@ -9,6 +9,7 @@ public enum IdLength {
     OTP_HISTORY_ID(10),
     CATALOG_ID(10),
     ADDRESS_ID(10),
+    AUTHOR_ID(10),
     ;
 
     private final int length;

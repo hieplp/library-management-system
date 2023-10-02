@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,5 +27,19 @@ public class ObjectUtil {
             throw new UnknownException("Copy properties failed");
         }
 
+    }
+
+    public <T> T parse(Object source, Class<T> type) {
+        try {
+            var response = type.getConstructor().newInstance();
+            BeanUtils.copyProperties(source, response);
+            return response;
+        } catch (InstantiationException
+                 | IllegalAccessException
+                 | InvocationTargetException
+                 | NoSuchMethodException e) {
+            log.error(e.getMessage());
+            throw new UnknownException(e.getMessage());
+        }
     }
 }

@@ -3,15 +3,12 @@ package dev.hieplp.library.common.helper.impl;
 import dev.hieplp.library.common.entity.*;
 import dev.hieplp.library.common.enums.location.AddressStatus;
 import dev.hieplp.library.common.exception.NotFoundException;
-import dev.hieplp.library.common.exception.UnknownException;
 import dev.hieplp.library.common.helper.LocationHelper;
+import dev.hieplp.library.common.util.ObjectUtil;
 import dev.hieplp.library.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
-
-import java.lang.reflect.InvocationTargetException;
 
 @Slf4j
 @Component
@@ -23,6 +20,8 @@ public class LocationHelperImpl implements LocationHelper {
     private final DistrictRepository districtRepo;
     private final WardRepository wardRepo;
     private final AddressRepository addressRepo;
+
+    private final ObjectUtil objectUtil;
 
     @Override
     public Country getCountry(String countryId) {
@@ -39,7 +38,7 @@ public class LocationHelperImpl implements LocationHelper {
     public <T> T getCountry(String countryId, Class<T> type) {
         log.info("Get country with id: {}", countryId);
         var country = getCountry(countryId);
-        return parse(country, type);
+        return objectUtil.parse(country, type);
     }
 
     @Override
@@ -71,7 +70,7 @@ public class LocationHelperImpl implements LocationHelper {
     public <T> T getCity(String cityId, Class<T> type) {
         log.info("Get city with id: {}", cityId);
         var city = getCity(cityId);
-        return parse(city, type);
+        return objectUtil.parse(city, type);
     }
 
     @Override
@@ -103,7 +102,7 @@ public class LocationHelperImpl implements LocationHelper {
     public <T> T getDistrict(String districtId, Class<T> type) {
         log.info("Get district with id: {}", districtId);
         var district = getDistrict(districtId);
-        return parse(district, type);
+        return objectUtil.parse(district, type);
     }
 
     @Override
@@ -135,7 +134,7 @@ public class LocationHelperImpl implements LocationHelper {
     public <T> T getWard(String wardId, Class<T> type) {
         log.info("Get ward with id: {}", wardId);
         var ward = getWard(wardId);
-        return parse(ward, type);
+        return objectUtil.parse(ward, type);
     }
 
     @Override
@@ -181,20 +180,6 @@ public class LocationHelperImpl implements LocationHelper {
     public <T> T getAddress(String addressId, Class<T> type) {
         log.info("Get address with id: {}", addressId);
         var address = getAddress(addressId);
-        return parse(address, type);
-    }
-
-    private <T> T parse(Object source, Class<T> type) {
-        try {
-            var response = type.getConstructor().newInstance();
-            BeanUtils.copyProperties(source, response);
-            return response;
-        } catch (InstantiationException
-                 | IllegalAccessException
-                 | InvocationTargetException
-                 | NoSuchMethodException e) {
-            log.error(e.getMessage());
-            throw new UnknownException(e.getMessage());
-        }
+        return objectUtil.parse(address, type);
     }
 }
