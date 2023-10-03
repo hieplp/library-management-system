@@ -6,4 +6,6 @@ public interface AuthorHelper {
     Author getAuthor(String authorId);
 
     <T> T getAuthor(String authorId, Class<T> clazz);
+
+    <T> T getActiveAuthor(String authorId, Class<T> clazz);
 }

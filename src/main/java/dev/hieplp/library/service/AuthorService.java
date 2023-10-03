@@ -5,6 +5,7 @@ import dev.hieplp.library.common.payload.response.GetListResponse;
 import dev.hieplp.library.payload.request.author.CreateAuthorRequest;
 import dev.hieplp.library.payload.request.author.UpdateAuthorRequest;
 import dev.hieplp.library.payload.response.author.AdminAuthorResponse;
+import dev.hieplp.library.payload.response.author.UserAuthorResponse;
 
 public interface AuthorService {
     // ------------------- ADMIN : Author -------------------
@@ -17,4 +18,7 @@ public interface AuthorService {
     GetListResponse<AdminAuthorResponse> getAuthorsByAdmin(GetListRequest request);
 
     // ------------------- USER -------------------
+    UserAuthorResponse getAuthorByUser(String authorId);
+
+    GetListResponse<UserAuthorResponse> getAuthorsByUser(GetListRequest request);
 }

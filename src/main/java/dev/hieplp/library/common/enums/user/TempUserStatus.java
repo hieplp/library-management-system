@@ -14,5 +14,4 @@ public enum TempUserStatus {
         this.status = status.byteValue();
     }
 
-
 }

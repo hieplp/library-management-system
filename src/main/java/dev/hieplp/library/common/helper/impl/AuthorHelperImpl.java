@@ -1,6 +1,7 @@
 package dev.hieplp.library.common.helper.impl;
 
 import dev.hieplp.library.common.entity.Author;
+import dev.hieplp.library.common.enums.author.AuthorStatus;
 import dev.hieplp.library.common.exception.NotFoundException;
 import dev.hieplp.library.common.helper.AuthorHelper;
 import dev.hieplp.library.common.util.ObjectUtil;
@@ -34,5 +35,19 @@ public class AuthorHelperImpl implements AuthorHelper {
         log.info("Get author with authorId: {}", authorId);
         var author = getAuthor(authorId);
         return objectUtil.parse(author, clazz);
+    }
+
+    @Override
+    public <T> T getActiveAuthor(String authorId, Class<T> clazz) {
+        log.info("Get active author with authorId: {}", authorId);
+
+        var author = getAuthor(authorId);
+        if (AuthorStatus.ACTIVE.getStatus().equals(author.getStatus())) {
+            return objectUtil.parse(author, clazz);
+        }
+
+        var message = String.format("Author with authorId: %s is not active", authorId);
+        log.warn(message);
+        throw new NotFoundException(message);
     }
 }

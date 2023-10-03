@@ -46,6 +46,7 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/auth/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/catalogs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/locations/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/authors/**")).permitAll()
 
                         // Admin
                         .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAnyAuthority(Role.ADMIN.getRoleAsString(), Role.ROOT.getRoleAsString())

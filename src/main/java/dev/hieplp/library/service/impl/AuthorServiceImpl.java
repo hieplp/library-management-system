@@ -14,6 +14,7 @@ import dev.hieplp.library.config.security.CurrentUser;
 import dev.hieplp.library.payload.request.author.CreateAuthorRequest;
 import dev.hieplp.library.payload.request.author.UpdateAuthorRequest;
 import dev.hieplp.library.payload.response.author.AdminAuthorResponse;
+import dev.hieplp.library.payload.response.author.UserAuthorResponse;
 import dev.hieplp.library.repository.AuthorRepository;
 import dev.hieplp.library.service.AuthorService;
 import lombok.RequiredArgsConstructor;
@@ -128,13 +129,27 @@ public class AuthorServiceImpl implements AuthorService {
 
     @Override
     public AdminAuthorResponse getAuthorByAdmin(String authorId) {
-        log.info("Get author with id: {}", authorId);
+        log.info("Get author with id: {} by admin", authorId);
         return authorHelper.getAuthor(authorId, AdminAuthorResponse.class);
     }
 
     @Override
     public GetListResponse<AdminAuthorResponse> getAuthorsByAdmin(GetListRequest request) {
-        log.info("Get authors with request: {}", request);
+        log.info("Get authors with request: {} by admin", request);
         return sqlUtil.getList(request, authorRepo, AdminAuthorResponse.class);
+    }
+
+    @Override
+    public UserAuthorResponse getAuthorByUser(String authorId) {
+        log.info("Get author with id: {} by user", authorId);
+        return authorHelper.getActiveAuthor(authorId, UserAuthorResponse.class);
+    }
+
+    @Override
+    public GetListResponse<UserAuthorResponse> getAuthorsByUser(GetListRequest request) {
+        log.info("Get authors with request: {} by user", request);
+        var statuses = new Byte[]{AuthorStatus.ACTIVE.getStatus()};
+        request.setStatuses(statuses);
+        return sqlUtil.getList(request, authorRepo, UserAuthorResponse.class);
     }
 }
