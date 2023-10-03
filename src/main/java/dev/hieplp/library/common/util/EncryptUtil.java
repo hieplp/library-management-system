@@ -83,7 +83,8 @@ public class EncryptUtil {
         } finally {
             // Clear password in memory for security
             Arrays.fill(rawPassword, Byte.MIN_VALUE);
-            Arrays.fill(userPassword, Byte.MIN_VALUE);
+            // TODO: It will update password in database. Need to fix
+            // Arrays.fill(userPassword, Byte.MIN_VALUE);
         }
     }
 }
