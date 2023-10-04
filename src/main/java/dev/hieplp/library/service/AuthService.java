@@ -3,6 +3,7 @@ package dev.hieplp.library.service;
 import dev.hieplp.library.common.model.TokenModel;
 import dev.hieplp.library.payload.request.auth.LoginRequest;
 import dev.hieplp.library.payload.request.auth.RefreshAccessTokenRequest;
+import dev.hieplp.library.payload.request.auth.UpdateRootPasswordRequest;
 import dev.hieplp.library.payload.request.auth.register.ConfirmRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.RequestToRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.ResendRegisterOtpRequest;
@@ -18,22 +19,25 @@ import dev.hieplp.library.payload.response.auth.verify.RequestToVerifyResponse;
 import dev.hieplp.library.payload.response.auth.verify.ResendVerifyOtpResponse;
 
 public interface AuthService {
-    // Register
+    // ------------------- REGISTER -------------------
     RequestToRegisterResponse requestToRegister(RequestToRegisterRequest request);
 
     ResendRegisterOtpResponse resendRegisterOtp(ResendRegisterOtpRequest request);
 
     ConfirmRegisterResponse confirmRegister(ConfirmRegisterRequest request);
 
-    // Login
+    // ------------------- LOGIN -------------------
     LoginResponse login(LoginRequest request);
 
     TokenModel refreshAccessToken(RefreshAccessTokenRequest request);
 
-    // Verify
+    // ------------------- VERIFY -------------------
     RequestToVerifyResponse requestToVerify(RequestToVerifyRequest request);
 
     ResendVerifyOtpResponse resendVerifyOtp(ResendVerifyOtpRequest request);
 
     ConfirmVerifyResponse confirmVerify(ConfirmVerifyRequest request);
+
+    // ------------------- ROOT -------------------
+    void updateRootPassword(UpdateRootPasswordRequest request);
 }

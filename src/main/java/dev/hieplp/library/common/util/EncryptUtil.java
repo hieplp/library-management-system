@@ -62,10 +62,19 @@ public class EncryptUtil {
     public byte[] generatePassword(String password, PrivateKey privateKey, byte[] salt) {
         try {
             log.info("Start generate password");
-            log.info("Pasword:{}", password);
-            byte[] rawPassword = decrypt(Base64.getDecoder().decode(password), privateKey);
-            rawPassword = generatorUtil.hash(ConverterUtil.toCharArray(rawPassword), salt);
-            return rawPassword;
+            log.info("Password: {}", password);
+            var rawPassword = decrypt(Base64.getDecoder().decode(password), privateKey);
+            return generatorUtil.hash(ConverterUtil.toCharArray(rawPassword), salt);
+        } catch (Exception e) {
+            throw new UnknownException(e.getMessage());
+        }
+    }
+
+    public byte[] generatePassword(String password, byte[] salt) {
+        try {
+            log.info("Start generate password");
+            var rawPassword = Base64.getDecoder().decode(password);
+            return generatorUtil.hash(ConverterUtil.toCharArray(rawPassword), salt);
         } catch (Exception e) {
             throw new UnknownException(e.getMessage());
         }

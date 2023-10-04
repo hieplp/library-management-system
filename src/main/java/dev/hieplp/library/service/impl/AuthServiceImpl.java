@@ -26,6 +26,7 @@ import dev.hieplp.library.config.AppConfig;
 import dev.hieplp.library.config.security.CurrentUser;
 import dev.hieplp.library.payload.request.auth.LoginRequest;
 import dev.hieplp.library.payload.request.auth.RefreshAccessTokenRequest;
+import dev.hieplp.library.payload.request.auth.UpdateRootPasswordRequest;
 import dev.hieplp.library.payload.request.auth.register.ConfirmRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.RequestToRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.ResendRegisterOtpRequest;
@@ -46,6 +47,8 @@ import dev.hieplp.library.repository.UserRepository;
 import dev.hieplp.library.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,6 +62,9 @@ import java.util.HashSet;
 @Transactional
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+
+    private final String ROOT_USERID = "root";
+    private final String ROOT_USERNAME = "root";
 
     private final CurrentUser currentUser;
 
@@ -405,5 +411,81 @@ public class AuthServiceImpl implements AuthService {
         return ConfirmVerifyResponse.builder()
                 .maskedEmail(maskUtil.maskEmail(user.getEmail()))
                 .build();
+    }
+
+    @Override
+    public void updateRootPassword(UpdateRootPasswordRequest request) {
+        log.info("Create root account with request: {}", request);
+
+        var user = userHelper.getUser(ROOT_USERID);
+
+        //  Check if token is root token
+        if (!user.getRootToken().equals(request.getToken())) {
+            var message = String.format("Token %s is not valid", request.getToken());
+            log.warn(message);
+            throw new UnauthorizedException(message);
+        }
+
+        // Update user
+        user
+                .setRootToken(generatorUtil.generateToken()) // Generate new root token
+                .setModifiedBy(user.getUserId())
+                .setModifiedAt(dateTimeUtil.getCurrentTimestamp());
+
+        // Update password
+        var salt = generatorUtil.generateSalt();
+        var password = encryptUtil.generatePassword(request.getPassword(), passwordPrivateKey, salt);
+        var passwordEntity = Password.builder()
+                .userId(user.getUserId())
+                .password(password)
+                .salt(salt)
+                .user(user)
+                .build();
+
+        passwordRepo.save(passwordEntity);
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void createRootAccountAfterStartup() {
+        log.info("Create root account after startup");
+
+        final var ROOT_PASSWORD = generatorUtil.generateToken();
+
+        // Check if root account existed
+        if (userRepo.existsByUsername(ROOT_USERNAME)) {
+            log.warn("Root account existed");
+            return;
+        }
+
+        var roles = new HashSet<UserRole>();
+        roles.add(UserRole.builder()
+                .id(UserRoleKey.builder()
+                        .userId(ROOT_USERID)
+                        .role(Role.ROOT.getRole())
+                        .build())
+                .build());
+
+        var user = User.builder()
+                .userId(ROOT_USERID)
+                .username(ROOT_USERNAME)
+                .createdBy(ROOT_USERID)
+                .status(UserStatus.ACTIVE.getStatus())
+                .roles(roles)
+                .rootToken(generatorUtil.generateToken())
+                .createdAt(dateTimeUtil.getCurrentTimestamp())
+                .modifiedBy(ROOT_USERID)
+                .modifiedAt(dateTimeUtil.getCurrentTimestamp())
+                .build();
+
+        var salt = generatorUtil.generateSalt();
+        var password = encryptUtil.generatePassword(ROOT_PASSWORD, salt);
+        var passwordEntity = Password.builder()
+                .userId(ROOT_USERID)
+                .password(password)
+                .salt(salt)
+                .user(user)
+                .build();
+
+        passwordRepo.save(passwordEntity);
     }
 }

@@ -4,6 +4,7 @@ import dev.hieplp.library.common.enums.response.SuccessCode;
 import dev.hieplp.library.common.payload.response.CommonResponse;
 import dev.hieplp.library.payload.request.auth.LoginRequest;
 import dev.hieplp.library.payload.request.auth.RefreshAccessTokenRequest;
+import dev.hieplp.library.payload.request.auth.UpdateRootPasswordRequest;
 import dev.hieplp.library.payload.request.auth.register.ConfirmRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.RequestToRegisterRequest;
 import dev.hieplp.library.payload.request.auth.register.ResendRegisterOtpRequest;
@@ -82,5 +83,12 @@ public class AuthController {
         log.info("Confirm verify with request: {}", request);
         var data = authService.confirmVerify(request);
         return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS, data));
+    }
+
+    @PostMapping("/update-root-password")
+    public ResponseEntity<CommonResponse> updateRootPassword(@Valid @RequestBody UpdateRootPasswordRequest request) {
+        log.info("Update root password with request: {}", request);
+        authService.updateRootPassword(request);
+        return ResponseEntity.ok(new CommonResponse(SuccessCode.SUCCESS));
     }
 }

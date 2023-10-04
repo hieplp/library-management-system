@@ -13,6 +13,8 @@ public interface UserService {
 
     CommonUserResponse updateOwnProfile(UpdateOwnProfileRequest request);
 
+    // ------------------- ADMIN -------------------
+
     AdminUserResponse getUserByAdmin(String userId);
 
     GetListResponse<AdminUserResponse> getUsersByAdmin(GetListRequest request);

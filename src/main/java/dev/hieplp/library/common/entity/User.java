@@ -37,6 +37,8 @@ public class User {
     @Column(length = 1)
     private Byte status;
 
+    private String rootToken;
+
     private String createdBy;
 
     private Timestamp createdAt;
