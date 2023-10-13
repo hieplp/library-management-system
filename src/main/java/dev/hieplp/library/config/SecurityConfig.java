@@ -48,6 +48,10 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/locations/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/authors/**")).permitAll()
 
+                        // Swagger
+                        .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
+
                         // Admin
                         .requestMatchers(new AntPathRequestMatcher("/admin/**")).hasAnyAuthority(Role.ADMIN.getRoleAsString(), Role.ROOT.getRoleAsString())
                         .requestMatchers(new AntPathRequestMatcher("/admin/users/**", HttpMethod.POST.name())).hasAuthority(Role.ROOT.getRoleAsString())
